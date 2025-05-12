@@ -4,6 +4,9 @@
         "socket.h": "c",
         "netdb.h": "c",
         "types.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "wait.h": "c",
+        "stdio.h": "c",
+        "in.h": "c"
     }
 }

@@ -41,29 +41,42 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    int sockfd;
-    int sendBytes;
+    int serverfd, clientfd;
+    // int sendBytes;
     struct sockaddr_in servaddr;
-    char sendLine[4096];
+    // char sendLine[4096];
 
-    char* source_address = "142.250.113.100";
+    // char* source_address = "142.250.113.100";
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket");
         exit(1);
     }
 
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
+    // serv_addr.sin_addr.s_addr = INADDR_ANY;
     servaddr.sin_port = htons(port_number);
 
-    if (inet_pton(AF_INET, source_address, &servaddr.sin_addr) <= 0) 
-        exit(1);
+    bind(serverfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
+    listen(serverfd, 5);
 
-    if (connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) 
-        exit(1);
+    char buffer[1024];
 
+    clientfd = accept(serverfd, NULL, NULL);
+
+    // Keep connection open
+    while (1) {
+        memset(buffer, 0, sizeof(buffer));
+        int bytes = read(clientfd, buffer, sizeof(buffer));
+        if (bytes <= 0) break; // connection closed
+
+        printf("Received: %s\n", buffer);
+
+        write(clientfd, "ACK from server", strlen("ACK from server"));
+    }
     
-
-    return 0;
+    close(clientfd);
+    close(serverfd);
+    return EXIT_SUCCESS;
 }
