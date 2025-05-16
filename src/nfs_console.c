@@ -44,6 +44,7 @@ int main(int argc, char* argv[]){
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(host_port);
+    servaddr.sin_addr.s_addr = INADDR_ANY;
 
     inet_pton(AF_INET, host_ip, &servaddr.sin_addr);
 

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -9,8 +10,20 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+
+#include "sync_info_mem_store.h"
+#include "queue.h"
+
 #define MAX_WORKERS 5
 
+
+void* foo(void* arg) {
+    
+    // Get current thread ID
+    pthread_t thisThread = pthread_self();
+    printf("Current thread ID: %lu\n",(unsigned long)thisThread);
+    return NULL;
+}
 
 int main(int argc, char* argv[]) {
 
@@ -41,12 +54,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    int serverfd, clientfd;
-    // int sendBytes;
-    struct sockaddr_in servaddr;
-    // char sendLine[4096];
 
-    // char* source_address = "142.250.113.100";
+    // Δηµιουργεί ένα socket στο port που δόθηκε.
+
+    int serverfd, clientfd;
+    struct sockaddr_in servaddr;
 
     if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket");
@@ -55,7 +67,7 @@ int main(int argc, char* argv[]) {
 
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
-    // serv_addr.sin_addr.s_addr = INADDR_ANY;
+    servaddr.sin_addr.s_addr = INADDR_ANY;
     servaddr.sin_port = htons(port_number);
 
     bind(serverfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
@@ -65,11 +77,32 @@ int main(int argc, char* argv[]) {
 
     clientfd = accept(serverfd, NULL, NULL);
 
-    // Keep connection open
+
+    // Ακολούθως, ετοιµάζει τις διάφορες δοµές δεδοµένων που θα χρειαστεί για το συγχρονισµό των καταλόγων.
+    hashTable* table = init_hash_table();   // Initialize the hash-table.
+    queue* q = init_queue();                // Initialize the queue.
+    
+    // Ετοιµάζει και δηµιουργεί ένα worker thread pool.
+
+    pthread_t worker_thread_pool;
+
+    for (size_t i = 0; i < worker_limit; i++) {
+        pthread_create(&worker_thread_pool, NULL, foo, NULL);
+    }
+
+    // Προετοιµάζει επίσης τον συγχρονισµό καταλόγων που καθορίζονται στο config_file:
+    // Αρχικά συνδέεται στο source_host:source_port όπου τρέχει ένας nfs_client και στέλνει µια εντολή:
+        
+
+
+
+    // Στο οποίο θα δέχεται µηνύµατα επικοινωνίας από το nfs_console.
+    // Keep connection open.
     while (1) {
         memset(buffer, 0, sizeof(buffer));
         int bytes = read(clientfd, buffer, sizeof(buffer));
-        if (bytes <= 0) break; // connection closed
+        if (bytes <= 0) 
+            break;
 
         printf("Received: %s\n", buffer);
 

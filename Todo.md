@@ -5,10 +5,10 @@
 Είναι ο αντίστοιχος διαχειριστής της προηγούµενης εργασίας (fss_manager), 
 προσαρµοσµένος για χρήση σε δικτυακό περιβάλλον.»
 
-1. ./nfs_manager -l <manager_logfile> -c <config_file> -n <worker_limit> -p <port_number> -b <bufferSize>
+<!-- 1. ./nfs_manager -l <manager_logfile> -c <config_file> -n <worker_limit> -p <port_number> -b <bufferSize> -->
 
-2. Στην αρχή δηµιουργεί ένα socket στο port που δόθηκε ως παράµετρος στο 
-command line στο οποίο θα δέχεται µηνύµατα επικοινωνίας από το nfs_console.
+<!-- 2. Στην αρχή δηµιουργεί ένα socket στο port που δόθηκε ως παράµετρος στο 
+command line στο οποίο θα δέχεται µηνύµατα επικοινωνίας από το nfs_console. -->
 
 3. Ετοιµάζει τις διάφορες δοµές δεδοµένων που θα χρειαστεί για το συγχρονισµό των καταλόγων.
 

@@ -136,18 +136,18 @@ watchDir* create_dir(char* source_dir, char* target_dir){
     dir->last_sync_time = 0;
     dir->error_count = 0;
     dir->next = NULL;
-    dir->watchdesc = 0;
+    // dir->watchdesc = 0;
     return dir;
 }
 
-watchDir* find_watchDir_wd(hashTable* table, int watchdesc) {
-    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
-        watchDir* curr = table->buckets[i];
-        while (curr != NULL) {
-            if (curr->watchdesc == watchdesc)
-                return curr;
-            curr = curr->next;
-        }
-    }
-    return NULL;
-}
+// watchDir* find_watchDir_wd(hashTable* table, int watchdesc) {
+//     for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+//         watchDir* curr = table->buckets[i];
+//         while (curr != NULL) {
+//             if (curr->watchdesc == watchdesc)
+//                 return curr;
+//             curr = curr->next;
+//         }
+//     }
+//     return NULL;
+// }
