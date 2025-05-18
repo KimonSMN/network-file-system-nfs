@@ -92,10 +92,16 @@ int main(int argc, char* argv[]) {
 
     // Προετοιµάζει επίσης τον συγχρονισµό καταλόγων που καθορίζονται στο config_file:
     // Αρχικά συνδέεται στο source_host:source_port όπου τρέχει ένας nfs_client και στέλνει µια εντολή:
-        
 
+    // pid_t pid = fork();
 
-
+    // if (pid == 0) {
+    //     // child process
+    // } else if (pid > 0) {
+    //     // parent process
+    // }
+    
+    
     // Στο οποίο θα δέχεται µηνύµατα επικοινωνίας από το nfs_console.
     // Keep connection open.
     while (1) {

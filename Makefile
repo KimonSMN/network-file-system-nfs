@@ -9,7 +9,7 @@ MANAGER_SRC = $(SRC_DIR)/nfs_manager.c
 CONSOLE_SRC = $(SRC_DIR)/nfs_console.c
 CLIENT_SRC = $(SRC_DIR)/nfs_client.c
 
-COMMON_SRCS = $(SRC_DIR)/queue.c $(SRC_DIR)/sync_info_mem_store.c
+COMMON_SRCS = $(SRC_DIR)/queue.c $(SRC_DIR)/sync_info_mem_store.c $(SRC_DIR)/helper.c
 COMMON_OBJS = $(COMMON_SRCS:$(SRC_DIR)/%.c=$(BIN_DIR)/%.o)
 
 MANAGER_BIN = $(BIN_DIR)/nfs_manager

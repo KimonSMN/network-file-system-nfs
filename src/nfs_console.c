@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -10,6 +11,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
+#include "helper.h"
 
 int main(int argc, char* argv[]){
 
@@ -44,7 +46,7 @@ int main(int argc, char* argv[]){
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(host_port);
-    servaddr.sin_addr.s_addr = INADDR_ANY;
+    // servaddr.sin_addr.s_addr = INADDR_ANY;
 
     inet_pton(AF_INET, host_ip, &servaddr.sin_addr);
 
@@ -58,13 +60,17 @@ int main(int argc, char* argv[]){
         fgets(write_buffer, sizeof(write_buffer), stdin);
         write_buffer[strlen(write_buffer)-1] = '\0';
 
-        write(sockfd, write_buffer, sizeof(write_buffer));
+        char tmp[1024];
+        strncpy(tmp, write_buffer, sizeof(write_buffer)); // safer.
 
-        char buffer[1024] = {0};
-        read(sockfd, buffer, sizeof(buffer));
-        printf("Response: %s\n", buffer);
-    
+        char* command = strtok(tmp, " ");   // token = add
+        char* source = strtok(NULL, " ");   // token = source
+        char* target = strtok(NULL, " ");   // token = target
+
+        handleCommand(command, sockfd, write_buffer, source, target);
+        
     }
+
 
     close(sockfd);
 
