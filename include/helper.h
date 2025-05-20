@@ -13,6 +13,8 @@ bool sendCommand(int socketFd, const char* buffer);
 
 void printResponse(int socketFd);
 
-void handleCommand(const char* input, int socketFd, const char* buffer, const char* source, const char* target);
+bool handleCommand(const char* input, int socketFd, const char* buffer, const char* source, const char* target);
+
+char* getTime();
 
 #endif

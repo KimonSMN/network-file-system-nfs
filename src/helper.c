@@ -27,7 +27,7 @@ void printResponse(int socketFd){
 }
 
 
-void handleCommand(const char* input, int socketFd, const char* buffer, const char* source, const char* target) {
+bool handleCommand(const char* input, int socketFd, const char* buffer, const char* source, const char* target) {
     if (checkCommand(input, "add")) {               // Command == add.
         if (source && target) {
             sendCommand(socketFd, buffer);
@@ -40,11 +40,14 @@ void handleCommand(const char* input, int socketFd, const char* buffer, const ch
             printf("Usage: cancel <source dir>");
     } else if (checkCommand(input, "shutdown")) {  // Command == shutdown.
         sendCommand(socketFd, buffer);
+        return false;
     } else
         printf("Command not recognized.\n");       // Unrecognized Command.
+
+    return true;
 }
 
-char* get_time(){
+char* getTime(){
     static char current_time[32];
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);

@@ -13,6 +13,7 @@
 
 #include "sync_info_mem_store.h"
 #include "queue.h"
+#include "helper.h"
 
 #define MAX_WORKERS 5
 
@@ -84,10 +85,10 @@ int main(int argc, char* argv[]) {
     
     // Ετοιµάζει και δηµιουργεί ένα worker thread pool.
 
-    pthread_t worker_thread_pool;
+    pthread_t worker_thread_pool[worker_limit];
 
-    for (size_t i = 0; i < worker_limit; i++) {
-        pthread_create(&worker_thread_pool, NULL, foo, NULL);
+    for (int i = 0; i < worker_limit; i++) {
+        pthread_create(&worker_thread_pool[i], NULL, foo, NULL);
     }
 
     // Προετοιµάζει επίσης τον συγχρονισµό καταλόγων που καθορίζονται στο config_file:
@@ -110,9 +111,24 @@ int main(int argc, char* argv[]) {
         if (bytes <= 0) 
             break;
 
-        printf("Received: %s\n", buffer);
-
+        // 1. Τυπώνει στην οθόνη,
+        char* command = strtok(buffer," ");
+        char* source = strtok(NULL," ");
+        char* target = strtok(NULL," ");
+        if (strcmp(command, "add") == 0) {
+            printf("[%s] Added file: %s -> %s\n", getTime(), source, target);
+        } else if (strcmp(command, "cancel") == 0) {
+            printf("[%s] Synchronization stopped for: %s\n", getTime(), source);
+        } else {
+            printf("[%s] Shutting down manager...\n", getTime());
+            printf("[%s] Waiting for all active workers to finish.\n", getTime());
+            printf("[%s] Processing remaining queued tasks.\n", getTime());
+            printf("[%s] Manager shutdown complete.\n", getTime());
+            break;
+        }
+        // 2. Στέλνει στο nfs_console, not done
         write(clientfd, "ACK from server", strlen("ACK from server"));
+        // 3. Γράφει στο manager-log-file. not done
     }
     
     close(clientfd);

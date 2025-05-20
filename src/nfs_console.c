@@ -46,7 +46,6 @@ int main(int argc, char* argv[]){
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(host_port);
-    // servaddr.sin_addr.s_addr = INADDR_ANY;
 
     inet_pton(AF_INET, host_ip, &servaddr.sin_addr);
 
@@ -67,10 +66,10 @@ int main(int argc, char* argv[]){
         char* source = strtok(NULL, " ");   // token = source
         char* target = strtok(NULL, " ");   // token = target
 
-        handleCommand(command, sockfd, write_buffer, source, target);
-        
+        if(!handleCommand(command, sockfd, write_buffer, source, target)) {
+            active = 0;
+        };
     }
-
 
     close(sockfd);
 
