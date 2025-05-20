@@ -11,11 +11,11 @@
 
 typedef struct watchDir{
     char*   source_host;
-    int     source_port;
+    char*     source_port;
     char*   source_dir;
 
     char*   target_host;
-    int     target_port;
+    char*   target_port;
     char*   target_dir;
 
     char*   status;
@@ -45,7 +45,7 @@ void print_hash_table(hashTable* table);
 
 void destroy_hash_table(hashTable* table);
 
-watchDir* create_dir(char* source_dir, char* target_dir);
+watchDir* create_dir(char* source_dir, char* source_host, char* source_port, char* target_dir, char* target_host, char* target_port);
 
 // watchDir* find_watchDir_wd(hashTable* table, int watchdesc);
 

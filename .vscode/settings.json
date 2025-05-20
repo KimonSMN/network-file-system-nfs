@@ -12,6 +12,7 @@
         "cstdlib": "c",
         "stdlib.h": "c",
         "inet.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "stat.h": "c"
     }
 }

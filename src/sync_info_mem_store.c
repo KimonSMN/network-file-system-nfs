@@ -40,7 +40,6 @@ void insert_watchDir(hashTable* table, watchDir* dir){
 
     dir->next = table->buckets[index];
     table->buckets[index] = dir;
-
 }
 
 /* Search for source_dir (key) inside hash-table.
@@ -100,7 +99,8 @@ void print_hash_table(hashTable* table){
         if (curr) {
             printf("Bucket %d:\n", i);
             while (curr) {
-                printf(" Source %s - Target %s - Active %d\n", curr->source_dir, curr->target_dir, curr->active);
+                printf(" Source %s@%s:%s - Target %s@%s:%s - Active %d\n", curr->source_dir, curr->source_host, curr->source_port,
+                     curr->target_dir, curr->target_host, curr->target_port, curr->active);
                 curr = curr->next;
             }
         }
@@ -128,10 +128,14 @@ void destroy_hash_table(hashTable* table){
 }
 
 /* Create a watchDir instance and return it. */
-watchDir* create_dir(char* source_dir, char* target_dir){
+watchDir* create_dir(char* source_dir, char* source_host, char* source_port, char* target_dir, char* target_host, char* target_port){
     watchDir* dir = malloc(sizeof(watchDir));
     dir->source_dir = strdup(source_dir);
+    dir->source_host = strdup(source_host);
+    dir->source_port = strdup(source_port);
     dir->target_dir = strdup(target_dir);
+    dir->target_host = strdup(target_host);
+    dir->target_port = strdup(target_port);
     dir->active = 0;
     dir->last_sync_time = 0;
     dir->error_count = 0;

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/stat.h>
 
 bool checkCommand(const char* input, const char* command);
 
@@ -16,5 +17,7 @@ void printResponse(int socketFd);
 bool handleCommand(const char* input, int socketFd, const char* buffer, const char* source, const char* target);
 
 char* getTime();
+
+int check_dir(const char *path);
 
 #endif

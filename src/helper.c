@@ -54,3 +54,11 @@ char* getTime(){
     strftime(current_time, sizeof(current_time), "%Y-%m-%d %H:%M:%S", &tm);
     return current_time;
 }
+
+int check_dir(const char *path) {
+    struct stat st;
+    if(stat(path, &st) != 0) 
+        return 1;
+    
+    return 0;
+}
