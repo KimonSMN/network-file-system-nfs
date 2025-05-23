@@ -62,3 +62,26 @@ int check_dir(const char *path) {
     
     return 0;
 }
+
+int client_list(const char* source_dir){
+    char path[1024];
+    char *array[] = {0}; // pointer array to strings
+    getcwd(path, sizeof(path));
+    strcat(path, source_dir);
+    printf("dir is: %s\n", path);
+
+    DIR* source = opendir(path);
+    if (!source) {
+        return EXIT_FAILURE;
+    }
+    struct dirent* source_entity;
+    source_entity = readdir(source);
+
+    while (source_entity != NULL) {                                                                 // While there are files in the directory.
+        if(strcmp(source_entity->d_name, ".") != 0 && strcmp(source_entity->d_name, "..") != 0 ) {
+            printf("Filename: %s\n", source_entity->d_name);
+        }
+        source_entity = readdir(source);
+    }
+    return EXIT_SUCCESS;
+}

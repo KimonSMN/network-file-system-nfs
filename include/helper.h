@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 bool checkCommand(const char* input, const char* command);
 
@@ -19,5 +21,7 @@ bool handleCommand(const char* input, int socketFd, const char* buffer, const ch
 char* getTime();
 
 int check_dir(const char *path);
+
+int client_list(const char* source_dir);
 
 #endif

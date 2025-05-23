@@ -119,8 +119,7 @@ int main(int argc, char* argv[]) {
         char *target_port  = strtok(NULL, " @:");
  
         // child
-        char *args[] = {"./bin/nfs_client", "-p", source_port, NULL};
-        execvp(args[0], args);
+
 
         // parent
         if (check_dir(source_dir) && check_dir(target_dir)) {

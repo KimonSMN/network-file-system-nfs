@@ -11,6 +11,8 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
+#include "helper.h"
+
 int main(int argc, char* argv[]) {
 
     int port_number = 0;
@@ -55,9 +57,13 @@ int main(int argc, char* argv[]) {
         // Parse command
         char *cmd = strtok(buffer, " \n");
         if (strcmp(cmd, "LIST") == 0) {
-            char *dir = strtok(NULL, "\n");
-            printf("YOOOOOOOOO WORKED %s\n", dir);
-        }else {
+            char *source_dir = strtok(NULL, "\n");
+            printf("YOOOOOOOOO WORKED %s\n", source_dir);
+            // List the files in your directory
+
+            client_list(source_dir);
+
+        } else {
             dprintf(client_fd, "ERROR: Unknown command\n");
         }
 
