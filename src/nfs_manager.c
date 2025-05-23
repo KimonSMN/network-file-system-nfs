@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (manager_logfile == NULL || config_file == NULL || worker_limit < MAX_WORKERS || port_number < 0 || bufferSize < 0) {
+    if (manager_logfile == NULL || config_file == NULL || worker_limit < MAX_WORKERS || port_number <= 0 || bufferSize <= 0) {
         printf("Usage: ./nfs_manager -l <manager_logfile> -c <config_file> -n <worker_limit> -p <port_number> -b <bufferSize>\n");
         return 1;
     }
@@ -58,26 +58,30 @@ int main(int argc, char* argv[]) {
 
     // Δηµιουργεί ένα socket στο port που δόθηκε.
 
-    // int serverfd, clientfd;
-    // struct sockaddr_in servaddr;
+    int serverfd, clientfd;
+    struct sockaddr_in servaddr;
 
-    // if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    //     perror("socket");
-    //     exit(1);
-    // }
+    if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket");
+        exit(1);
+    }
 
-    // memset(&servaddr, 0, sizeof(servaddr));
-    // servaddr.sin_family = AF_INET;
-    // servaddr.sin_addr.s_addr = INADDR_ANY;
-    // servaddr.sin_port = htons(port_number);
+    int opt = 1;
+    setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = INADDR_ANY;
+    servaddr.sin_port = htons(port_number);
 
-    // bind(serverfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
-    // listen(serverfd, 5);
+    bind(serverfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
+    listen(serverfd, 5);
 
-    // char buffer[1024];
+    clientfd = accept(serverfd, NULL, NULL);
 
-    // clientfd = accept(serverfd, NULL, NULL);
+    // We wait until nfs_console joins......
+    // Then we can continue.
 
+    char buffer[1024];
 
     // Ακολούθως, ετοιµάζει τις διάφορες δοµές δεδοµένων που θα χρειαστεί για το συγχρονισµό των καταλόγων.
     hashTable* table = init_hash_table();   // Initialize the hash-table.
@@ -93,7 +97,8 @@ int main(int argc, char* argv[]) {
 
     // Προετοιµάζει επίσης τον συγχρονισµό καταλόγων που καθορίζονται στο config_file:
     // Αρχικά συνδέεται στο source_host:source_port όπου τρέχει ένας nfs_client και στέλνει µια εντολή:
-
+   
+    printf("Opening cofing file for reading\n");
     FILE *configFp = fopen(config_file, "r");         // Open the config file for reading.
     if (configFp == NULL) {
         perror("Error opening file.");
@@ -112,44 +117,80 @@ int main(int argc, char* argv[]) {
         char *target_dir   = strtok(NULL, " @:");
         char *target_host  = strtok(NULL, " @:");
         char *target_port  = strtok(NULL, " @:");
+ 
+        // child
+        char *args[] = {"./bin/nfs_client", "-p", source_port, NULL};
+        execvp(args[0], args);
 
-
+        // parent
         if (check_dir(source_dir) && check_dir(target_dir)) {
             watchDir* curr = create_dir(source_dir, source_host, source_port, target_dir, target_host, target_port);
             insert_watchDir(table, curr);
+
+            // creatre a tcp connection
+            // Connection with nfs_client(s)
+            int sockfd;
+            struct sockaddr_in servaddr;
+
+            // Create socket
+            sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+            int opt = 1;
+            setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+            memset(&servaddr, 0, sizeof(servaddr));
+            servaddr.sin_family = AF_INET;
+            servaddr.sin_port = htons(atoi(source_port));
+
+            inet_pton(AF_INET, source_host, &servaddr.sin_addr);
+            // connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
+            if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+                perror("connect failed");
+                close(sockfd);
+                continue;
+            }
+
+            char command[512];
+
+            snprintf(command, sizeof(command), "LIST %s\n", source_dir);
+            write(sockfd, command, sizeof(command));
+
+            close(sockfd);
         }
     }
     print_hash_table(table);
-    
+
     // Στο οποίο θα δέχεται µηνύµατα επικοινωνίας από το nfs_console.
     // Keep connection open.
-    // while (1) {
-    //     memset(buffer, 0, sizeof(buffer));
-    //     int bytes = read(clientfd, buffer, sizeof(buffer));
-    //     if (bytes <= 0) 
-    //         break;
+    while (1) {
 
-    //     // 1. Τυπώνει στην οθόνη,
-    //     char* command = strtok(buffer," ");
-    //     char* source = strtok(NULL," ");
-    //     char* target = strtok(NULL," ");
-    //     if (strcmp(command, "add") == 0) {
-    //         printf("[%s] Added file: %s -> %s\n", getTime(), source, target);
-    //     } else if (strcmp(command, "cancel") == 0) {
-    //         printf("[%s] Synchronization stopped for: %s\n", getTime(), source);
-    //     } else {
-    //         printf("[%s] Shutting down manager...\n", getTime());
-    //         printf("[%s] Waiting for all active workers to finish.\n", getTime());
-    //         printf("[%s] Processing remaining queued tasks.\n", getTime());
-    //         printf("[%s] Manager shutdown complete.\n", getTime());
-    //         break;
-    //     }
-    //     // 2. Στέλνει στο nfs_console, not done
-    //     write(clientfd, "ACK from server", strlen("ACK from server"));
-    //     // 3. Γράφει στο manager-log-file. not done
-    // }
-    
-    // close(clientfd);
-    // close(serverfd);
+        memset(buffer, 0, sizeof(buffer));
+        int bytes = read(clientfd, buffer, sizeof(buffer));
+        if (bytes <= 0) {
+            continue;;
+        }
+
+        // 1. Τυπώνει στην οθόνη,
+        char* command = strtok(buffer," ");
+        char* source = strtok(NULL," ");
+        char* target = strtok(NULL," ");
+        if (strcmp(command, "add") == 0) {
+            printf("[%s] Added file: %s -> %s\n", getTime(), source, target);
+        } else if (strcmp(command, "cancel") == 0) {
+            printf("[%s] Synchronization stopped for: %s\n", getTime(), source);
+        } else {
+            printf("[%s] Shutting down manager...\n", getTime());
+            printf("[%s] Waiting for all active workers to finish.\n", getTime());
+            printf("[%s] Processing remaining queued tasks.\n", getTime());
+            printf("[%s] Manager shutdown complete.\n", getTime());
+            break;
+        }
+        // 2. Στέλνει στο nfs_console, not done
+        write(clientfd, "ACK from server", strlen("ACK from server"));
+        // 3. Γράφει στο manager-log-file. not done
+
+    }
+    close(clientfd);
+
+    close(serverfd);
     return EXIT_SUCCESS;
 }

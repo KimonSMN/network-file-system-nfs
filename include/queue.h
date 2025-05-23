@@ -6,11 +6,11 @@
 
 typedef struct node{
     char*   source_host;
-    int     source_port;
+    char*   source_port;
     char*   source_dir;
 
     char*   target_host;
-    int     target_port;
+    char*   target_port;
     char*   target_dir;
     
     char* filename;
@@ -25,8 +25,7 @@ typedef struct queue{
 } queue;
 
 /* Initializes node struct and returns the node. */
-node* init_node(char* source, char* target, char* filename, char* operation);
-
+node* init_node(char* source_dir, char* source_host, char* source_port, char* target_dir, char* target_host, char* target_port, char* filename, char* operation);
 /* Free memory of allocated `node* job` */
 void destroy_node (node* job);
 

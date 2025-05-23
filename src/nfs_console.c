@@ -46,9 +46,10 @@ int main(int argc, char* argv[]){
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(host_port);
+    int opt = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     inet_pton(AF_INET, host_ip, &servaddr.sin_addr);
-
     connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
 
     int active = 1;

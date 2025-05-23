@@ -3,11 +3,17 @@
 
 #include "queue.h"
 
-node* init_node(char* source, char* target, char* filename, char* operation){
+node* init_node(char* source_dir, char* source_host, char* source_port, char* target_dir, char* target_host, char* target_port, char* filename, char* operation){
     node* job = malloc(sizeof(struct node));
     if (job == NULL) return NULL;
-    job->source_dir = strdup(source);
-    job->target_dir = strdup(target);
+    job->source_dir = strdup(source_dir);
+    job->source_host = strdup(source_host);
+    job->source_port = strdup(source_port);
+    
+    job->target_dir = strdup(target_dir);
+    job->target_host = strdup(target_host);
+    job->target_port = strdup(target_port);
+    
     job->filename = strdup(filename);
     job->operation = strdup(operation);
     job->next = NULL;
@@ -19,7 +25,13 @@ void destroy_node(node* job){
     if(job == NULL) return;
 
     free(job->source_dir);
+    free(job->source_host);
+    free(job->source_port);
+
     free(job->target_dir);
+    free(job->target_host);
+    free(job->target_port);
+
     free(job->filename);
     free(job->operation);
     free(job);
