@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 
     // Δηµιουργεί ένα socket στο port που δόθηκε.
 
-    int serverfd, clientfd;
+    int serverfd, consolefd;
     struct sockaddr_in servaddr;
 
     if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     bind(serverfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
     listen(serverfd, 5);
 
-    clientfd = accept(serverfd, NULL, NULL);
+    consolefd = accept(serverfd, NULL, NULL);
 
     // We wait until nfs_console joins......
     // Then we can continue.
@@ -101,6 +101,12 @@ int main(int argc, char* argv[]) {
     printf("Opening cofing file for reading\n");
     FILE *configFp = fopen(config_file, "r");         // Open the config file for reading.
     if (configFp == NULL) {
+        perror("Error opening file.");
+        return 1;
+    }
+
+    FILE *logfileFp = fopen(manager_logfile, "w");
+    if (logfileFp == NULL) {
         perror("Error opening file.");
         return 1;
     }
@@ -165,7 +171,11 @@ int main(int argc, char* argv[]) {
             strcat(new, target_dir);
             strcat(new, "@");
             // Τυπώνει στην οθόνη.
-            printf_fprintf(manager_logfile,"[%s] Added file: %s@%s:%s -> %s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port);
+            printf_fprintf(logfileFp,"[%s] Added file: %s@%s:%s -> %s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port);
+            fflush(logfileFp);
+            char consolebuffer[1024];
+            snprintf(consolebuffer,1024,"[%s] Added file: %s@%s:%s -> %s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port );
+            write(consolefd, consolebuffer, strlen(consolebuffer));
 
             close(sockfd);
         }
@@ -177,7 +187,7 @@ int main(int argc, char* argv[]) {
     while (1) {
 
         memset(buffer, 0, sizeof(buffer));
-        int bytes = read(clientfd, buffer, sizeof(buffer));
+        int bytes = read(consolefd, buffer, sizeof(buffer));
         if (bytes <= 0) {
             continue;;
         }
@@ -198,12 +208,14 @@ int main(int argc, char* argv[]) {
             break;
         }
         // 2. Στέλνει στο nfs_console, not done
-        write(clientfd, "ACK from server", strlen("ACK from server"));
+        write(consolefd, "ACK from server", strlen("ACK from server"));
         // 3. Γράφει στο manager-log-file. not done
 
     }
-    close(clientfd);
-
+ 
+    fclose(configFp);
+    fclose(logfileFp);
+    close(consolefd);
     close(serverfd);
     return EXIT_SUCCESS;
 }

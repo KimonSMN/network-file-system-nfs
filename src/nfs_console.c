@@ -70,6 +70,7 @@ int main(int argc, char* argv[]){
         if(!handleCommand(command, sockfd, write_buffer, source, target)) {
             active = 0;
         };
+        printResponse(sockfd);
     }
 
     close(sockfd);

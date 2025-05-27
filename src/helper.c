@@ -91,18 +91,15 @@ char* client_list(const char* source_dir){
     return array;
 }
 
-void printf_fprintf(char* filename, char* format, ...){
-    // OPENS FILES  
+void printf_fprintf(FILE* stream, char* format, ...){
     va_list ap;
     va_start(ap, format);
     vprintf(format, ap);
     va_end(ap);
 
-    FILE* stream = fopen(filename, "a");
 
     va_start(ap, format);
     vfprintf(stream, format, ap);
     va_end(ap);
 
-    fclose(stream);
 }

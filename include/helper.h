@@ -26,6 +26,6 @@ int check_dir(const char *path);
 
 char* client_list(const char* source_dir);
 
-void printf_fprintf(char* filename, char* format, ...);
+void printf_fprintf(FILE* stream, char* format, ...);
 
 #endif
