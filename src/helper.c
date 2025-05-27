@@ -80,12 +80,12 @@ char* client_list(const char* source_dir){
     while (source_entity != NULL) {      
         if(strcmp(source_entity->d_name, ".") != 0 && strcmp(source_entity->d_name, "..") != 0 ) {
             strcat(array, source_entity->d_name);
-            // strcat(array, "");
+            strcat(array, "\n"); 
         }
 
         source_entity = readdir(source);
     }
-    strcat(array, ".\n");
+    strcat(array, ".");
 
     closedir(source);
     return array;
@@ -103,3 +103,17 @@ void printf_fprintf(FILE* stream, char* format, ...){
     va_end(ap);
 
 }
+
+// char* get_files(char* buffer) {
+//     char* files_string = malloc(sizeof(buffer));
+//     files_string[0] = '\0';
+    
+    
+//     char* file = strtok(buffer, "$");
+//     while (file != NULL) {
+//         strcat(files_string, file);
+//         file = strtok(NULL ,"$");
+//     }
+
+//     return files_string;
+// } 

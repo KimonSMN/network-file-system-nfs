@@ -28,4 +28,5 @@ char* client_list(const char* source_dir);
 
 void printf_fprintf(FILE* stream, char* format, ...);
 
+// char* get_files(char* buffer);
 #endif

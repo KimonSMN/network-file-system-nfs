@@ -1,4 +1,4 @@
 /source1@localhost:8000 /target1@localhost:8000
-/source2@localhost:8000 /target2@localhost:8000
-/source3@localhost:8000 /target3@localhost:8000
-/source4@localhost:8000 /target4@localhost:8000
+/source2@localhost:8080 /target2@localhost:8080
+/source3@localhost:8080 /target3@localhost:8080
+/source4@localhost:8080 /target4@localhost:8080

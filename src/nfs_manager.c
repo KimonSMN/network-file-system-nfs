@@ -17,14 +17,28 @@
 
 #define MAX_WORKERS 5
 
+queue* q;
+pthread_mutex_t lock;
+pthread_cond_t cond;
 
-void* foo(void* arg) {
-    
-    // Get current thread ID
-    pthread_t thisThread = pthread_self();
-    printf("Current thread ID: %lu\n",(unsigned long)thisThread);
+void* worker_thread(void* arg) {
+    while (1) {
+        pthread_mutex_lock(&lock);
+
+        while (!isEmpty(q)) {
+            pthread_cond_wait(&cond, &lock);  // sleep until there's work
+        }
+
+        node* node = dequeue(q);  // get work from queue
+        pthread_mutex_unlock(&lock);
+
+        printf("Thread %lu processing task %s\n", pthread_self(), node->filename);
+        sleep(2);
+    }
+
     return NULL;
 }
+
 
 int main(int argc, char* argv[]) {
 
@@ -85,14 +99,16 @@ int main(int argc, char* argv[]) {
 
     // Ακολούθως, ετοιµάζει τις διάφορες δοµές δεδοµένων που θα χρειαστεί για το συγχρονισµό των καταλόγων.
     hashTable* table = init_hash_table();   // Initialize the hash-table.
-    queue* q = init_queue();                // Initialize the queue.
+    q = init_queue();                // Initialize the queue.
     
     // Ετοιµάζει και δηµιουργεί ένα worker thread pool.
 
     // pthread_t worker_thread_pool[worker_limit];
+    // pthread_mutex_init(&lock, NULL);
+    // pthread_cond_init(&cond, NULL);
 
     // for (int i = 0; i < worker_limit; i++) {
-    //     pthread_create(&worker_thread_pool[i], NULL, foo, NULL);
+    //     pthread_create(&worker_thread_pool[i], NULL, worker_thread, NULL);
     // }
 
     // Προετοιµάζει επίσης τον συγχρονισµό καταλόγων που καθορίζονται στο config_file:
@@ -123,11 +139,7 @@ int main(int argc, char* argv[]) {
         char *target_dir   = strtok(NULL, " @:");
         char *target_host  = strtok(NULL, " @:");
         char *target_port  = strtok(NULL, " @:");
- 
-        // child
 
-
-        // parent
         if (check_dir(source_dir) && check_dir(target_dir)) {
             watchDir* curr = create_dir(source_dir, source_host, source_port, target_dir, target_host, target_port);
             insert_watchDir(table, curr);
@@ -159,23 +171,44 @@ int main(int argc, char* argv[]) {
             write(sockfd, command, sizeof(command));
 
             char new[1024];
-            read(sockfd, new, sizeof(new));
+            memset(new, 0, sizeof(new));
 
-            strcat(new, source_host);
-            strcat(new, ":");
-            strcat(new, source_port);
-            strcat(new, target_host);
-            strcat(new, ":");
-            strcat(new, target_port);
-            strcat(new, ":");
-            strcat(new, target_dir);
-            strcat(new, "@");
-            // Τυπώνει στην οθόνη.
-            printf_fprintf(logfileFp,"[%s] Added file: %s@%s:%s -> %s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port);
-            fflush(logfileFp);
-            char consolebuffer[1024];
-            snprintf(consolebuffer,1024,"[%s] Added file: %s@%s:%s -> %s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port );
-            write(consolefd, consolebuffer, strlen(consolebuffer));
+            read(sockfd, new, sizeof(new));
+            printf("WHOLE BUFFER %s", new);
+            char* file = strtok(new, "\n"); // get first file from the buffer "file$\nfile$\n."
+            while (file != NULL) {
+
+                if (strcmp(file, ".\0") == 0) break; // end of file list
+                if (strlen(file) == 0) {
+                    file = strtok(NULL, "\n");
+                    continue;
+                }
+
+                // Τυπώνει στην οθόνη. Γράφει στο manager-log-file
+                printf_fprintf(logfileFp,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir, file, target_host, target_port);
+                fflush(logfileFp);
+                // Στέλνει στο nfs_console
+                char consolebuffer[1024];
+                snprintf(consolebuffer,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
+                write(consolefd, consolebuffer, strlen(consolebuffer));
+                
+                file = strtok(NULL ,"\n");
+            }
+
+
+
+
+
+            // node* job = init_node(source_dir,source_port, source_host, target_dir, target_host, target_port)
+
+            // // ADD WORK
+            // pthread_mutex_lock(&lock);
+            // enqueue(q,job);
+            // pthread_cond_signal(&cond);  // wake one thread
+            // pthread_mutex_unlock(&lock);
+
+
+
 
             close(sockfd);
         }
