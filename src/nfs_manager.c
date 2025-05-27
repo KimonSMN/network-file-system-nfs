@@ -149,14 +149,16 @@ int main(int argc, char* argv[]) {
             }
 
             char command[512];
-
             snprintf(command, sizeof(command), "LIST %s\n", source_dir);
             write(sockfd, command, sizeof(command));
 
+            char new[1024];
+            read(sockfd, new, sizeof(new));
+            printf("BUFFER I GOT IS %s\n", new);
             close(sockfd);
         }
     }
-    print_hash_table(table);
+    // print_hash_table(table);
 
     // Στο οποίο θα δέχεται µηνύµατα επικοινωνίας από το nfs_console.
     // Keep connection open.

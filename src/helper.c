@@ -63,10 +63,10 @@ int check_dir(const char *path) {
     return 0;
 }
 
-char** client_list(const char* source_dir){
+char* client_list(const char* source_dir){
     char path[1024];
-    char *array[] = {0}; // pointer array to strings
-    int counter = 0;
+    char* array = malloc(1024);
+    array[0] = '\0';
     getcwd(path, sizeof(path));
     strcat(path, source_dir);
 
@@ -79,16 +79,14 @@ char** client_list(const char* source_dir){
 
     while (source_entity != NULL) {      
         if(strcmp(source_entity->d_name, ".") != 0 && strcmp(source_entity->d_name, "..") != 0 ) {
-            printf("%s\n", source_entity->d_name);
-            array[counter] = source_entity->d_name;
-            printf("array %d : %s\n", counter, array[counter]);
-            counter++;
+            strcat(array, source_entity->d_name);
+            // strcat(array, "");
         }
 
         source_entity = readdir(source);
     }
-    array[counter] = ".";
-    printf("array %d : %s\n", counter, array[counter]);
+    strcat(array, ".\n");
 
+    closedir(source);
     return array;
 }

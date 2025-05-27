@@ -22,6 +22,6 @@ char* getTime();
 
 int check_dir(const char *path);
 
-char** client_list(const char* source_dir);
+char* client_list(const char* source_dir);
 
 #endif

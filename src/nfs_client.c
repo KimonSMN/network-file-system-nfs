@@ -60,8 +60,11 @@ int main(int argc, char* argv[]) {
             char *source_dir = strtok(NULL, "\n");
             printf("YOOOOOOOOO WORKED %s\n", source_dir);
             // List the files in your directory
-
-            client_list(source_dir);
+            char* arr = client_list(source_dir);
+            if (arr != NULL) {
+                write(client_fd, arr, strlen(arr));
+                free(arr);            
+            }
 
         } else {
             dprintf(client_fd, "ERROR: Unknown command\n");
