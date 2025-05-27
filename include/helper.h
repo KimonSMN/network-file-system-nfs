@@ -9,6 +9,8 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 bool checkCommand(const char* input, const char* command);
 
@@ -23,5 +25,7 @@ char* getTime();
 int check_dir(const char *path);
 
 char* client_list(const char* source_dir);
+
+void printf_fprintf(char* filename, char* format, ...);
 
 #endif

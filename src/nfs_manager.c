@@ -154,7 +154,19 @@ int main(int argc, char* argv[]) {
 
             char new[1024];
             read(sockfd, new, sizeof(new));
-            printf("BUFFER I GOT IS %s\n", new);
+
+            strcat(new, source_host);
+            strcat(new, ":");
+            strcat(new, source_port);
+            strcat(new, target_host);
+            strcat(new, ":");
+            strcat(new, target_port);
+            strcat(new, ":");
+            strcat(new, target_dir);
+            strcat(new, "@");
+            // Τυπώνει στην οθόνη.
+            printf_fprintf(manager_logfile,"[%s] Added file: %s@%s:%s -> %s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port);
+
             close(sockfd);
         }
     }
