@@ -72,7 +72,6 @@ node* dequeue(queue* q){
 }
 
 int isEmpty(queue* q){
-    if(q->head == NULL) return 1;
-    
-    return 0;
+   
+    return q->head == NULL;
 }

@@ -11,6 +11,10 @@
 #include <dirent.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 bool checkCommand(const char* input, const char* command);
 
@@ -28,5 +32,6 @@ char* client_list(const char* source_dir);
 
 void printf_fprintf(FILE* stream, char* format, ...);
 
+int myconnect(const char* host, const char* port);
 // char* get_files(char* buffer);
 #endif

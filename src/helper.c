@@ -104,6 +104,27 @@ void printf_fprintf(FILE* stream, char* format, ...){
 
 }
 
+int myconnect(const char* host, const char* port) {
+    int socketfd;
+    struct sockaddr_in servaddr;
+
+    // Create socket
+    socketfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    int opt = 1;
+    setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    memset(&servaddr, 0, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(port);
+
+    inet_pton(AF_INET, host, &servaddr.sin_addr);
+    if (connect(socketfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+        close(socketfd);
+        return -1;
+    }
+    return socketfd;
+}
+
 // char* get_files(char* buffer) {
 //     char* files_string = malloc(sizeof(buffer));
 //     files_string[0] = '\0';

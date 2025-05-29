@@ -18,24 +18,40 @@
 #define MAX_WORKERS 5
 
 queue* q;
-pthread_mutex_t lock;
+pthread_mutex_t mutex;
 pthread_cond_t cond;
 
-void* worker_thread(void* arg) {
-    while (1) {
-        pthread_mutex_lock(&lock);
 
-        while (!isEmpty(q)) {
-            pthread_cond_wait(&cond, &lock);  // sleep until there's work
+void* worker_thread(void* arg) {
+    printf("Worker thread %lu started\n", pthread_self());
+
+    while (1) {
+        pthread_mutex_lock(&mutex);
+
+        while (isEmpty(q)) {
+            pthread_cond_wait(&cond, &mutex);
         }
 
-        node* node = dequeue(q);  // get work from queue
-        pthread_mutex_unlock(&lock);
+        node* node = dequeue(q);
+        pthread_mutex_unlock(&mutex);
 
-        printf("Thread %lu processing task %s\n", pthread_self(), node->filename);
-        sleep(2);
+        if (node == NULL || node->filename == NULL || node->source_dir == NULL) {
+            perror("Faulty Job");
+            continue;
+        }
+
+        int source_socket = myconnect(node->source_host, 8000);
+        if (source_socket < 0) {
+            perror("Connection failed");
+            continue;
+        }
+    
+        char command[512];
+        snprintf(command, sizeof(command), "PULL \n");
+        write(source_socket, command, strlen(command));
+
+        close(source_socket);
     }
-
     return NULL;
 }
 
@@ -69,7 +85,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-
     // Δηµιουργεί ένα socket στο port που δόθηκε.
 
     int serverfd, consolefd;
@@ -99,31 +114,28 @@ int main(int argc, char* argv[]) {
 
     // Ακολούθως, ετοιµάζει τις διάφορες δοµές δεδοµένων που θα χρειαστεί για το συγχρονισµό των καταλόγων.
     hashTable* table = init_hash_table();   // Initialize the hash-table.
-    q = init_queue();                // Initialize the queue.
+    q = init_queue();                       // Initialize the queue.
     
     // Ετοιµάζει και δηµιουργεί ένα worker thread pool.
 
-    // pthread_t worker_thread_pool[worker_limit];
-    // pthread_mutex_init(&lock, NULL);
-    // pthread_cond_init(&cond, NULL);
+    pthread_t worker_thread_pool[worker_limit];
+    pthread_mutex_init(&mutex, NULL);
+    pthread_cond_init(&cond, NULL);
 
-    // for (int i = 0; i < worker_limit; i++) {
-    //     pthread_create(&worker_thread_pool[i], NULL, worker_thread, NULL);
-    // }
+    for (int i = 0; i < worker_limit; i++) {
+        pthread_create(&worker_thread_pool[i], NULL, worker_thread, NULL);
+    }
 
     // Προετοιµάζει επίσης τον συγχρονισµό καταλόγων που καθορίζονται στο config_file:
     // Αρχικά συνδέεται στο source_host:source_port όπου τρέχει ένας nfs_client και στέλνει µια εντολή:
    
-    printf("Opening cofing file for reading\n");
     FILE *configFp = fopen(config_file, "r");         // Open the config file for reading.
     if (configFp == NULL) {
-        perror("Error opening file.");
         return 1;
     }
 
     FILE *logfileFp = fopen(manager_logfile, "w");
     if (logfileFp == NULL) {
-        perror("Error opening file.");
         return 1;
     }
 
@@ -159,22 +171,20 @@ int main(int argc, char* argv[]) {
             servaddr.sin_port = htons(atoi(source_port));
 
             inet_pton(AF_INET, source_host, &servaddr.sin_addr);
-            // connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
             if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-                perror("connect failed");
+                perror("Connection failed");
                 close(sockfd);
                 continue;
             }
+            printf("Connection with client at port %s started\n", source_port);
 
             char command[512];
             snprintf(command, sizeof(command), "LIST %s\n", source_dir);
             write(sockfd, command, sizeof(command));
-
             char new[1024];
             memset(new, 0, sizeof(new));
 
             read(sockfd, new, sizeof(new));
-            printf("WHOLE BUFFER %s", new);
             char* file = strtok(new, "\n"); // get first file from the buffer "file$\nfile$\n."
             while (file != NULL) {
 
@@ -192,24 +202,15 @@ int main(int argc, char* argv[]) {
                 snprintf(consolebuffer,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
                 write(consolefd, consolebuffer, strlen(consolebuffer));
                 
+                node* job = init_node(source_dir, source_port, source_host, target_dir, target_port, target_host, file, "PUSH");
+                pthread_mutex_lock(&mutex);
+                enqueue(q, job);
+                pthread_cond_broadcast(&cond); 
+                pthread_mutex_unlock(&mutex);
+
                 file = strtok(NULL ,"\n");
             }
-
-
-
-
-
-            // node* job = init_node(source_dir,source_port, source_host, target_dir, target_host, target_port)
-
-            // // ADD WORK
-            // pthread_mutex_lock(&lock);
-            // enqueue(q,job);
-            // pthread_cond_signal(&cond);  // wake one thread
-            // pthread_mutex_unlock(&lock);
-
-
-
-
+            printf("Connection with client at port %s closed\n", source_port);
             close(sockfd);
         }
     }

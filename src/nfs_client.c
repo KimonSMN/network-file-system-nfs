@@ -43,9 +43,9 @@ int main(int argc, char* argv[]) {
     bind(server_fd, (struct sockaddr *)&addr, sizeof(addr));
     listen(server_fd, 5);
     printf("nfs_client listening on port %d...\n", port_number);
-
+    int client_fd;
     while (1) {
-        int client_fd = accept(server_fd, NULL, NULL);
+        client_fd = accept(server_fd, NULL, NULL);
         if (client_fd < 0) {
             perror("accept");
             continue;
@@ -53,26 +53,31 @@ int main(int argc, char* argv[]) {
 
         char buffer[1024] = {0};
         read(client_fd, buffer, sizeof(buffer));
+        printf("Received buffer: %s\n", buffer);  // Add this
 
         // Parse command
         char *cmd = strtok(buffer, " \n");
         if (strcmp(cmd, "LIST") == 0) {
             char *source_dir = strtok(NULL, "\n");
-            printf("YOOOOOOOOO WORKED %s\n", source_dir);
             // List the files in your directory
             char* arr = client_list(source_dir);
             if (arr != NULL) {
                 write(client_fd, arr, strlen(arr));
                 free(arr);            
             }
+        } else if (strcmp(cmd, "PULL") == 0) {
+            // char *source_dir = strtok(NULL, "\n");
+            // char *source_file = strtok(NULL, "\n");
+            // printf("I got %s and %s\n", source_dir, source_file);
+            write(client_fd, "Hello", strlen("Hello"));
 
         } else {
             dprintf(client_fd, "ERROR: Unknown command\n");
         }
 
-        close(client_fd);
 
     }
+    close(client_fd);
     close(server_fd);
 
     return EXIT_SUCCESS;
