@@ -23,7 +23,6 @@ pthread_cond_t cond;
 
 
 void* worker_thread(void* arg) {
-    printf("Worker thread %lu started\n", pthread_self());
 
     while (1) {
         pthread_mutex_lock(&mutex);
@@ -176,7 +175,6 @@ int main(int argc, char* argv[]) {
                 close(sockfd);
                 continue;
             }
-            printf("Connection with client at port %s started\n", source_port);
 
             char command[512];
             snprintf(command, sizeof(command), "LIST %s\n", source_dir);
@@ -210,7 +208,6 @@ int main(int argc, char* argv[]) {
 
                 file = strtok(NULL ,"\n");
             }
-            printf("Connection with client at port %s closed\n", source_port);
             close(sockfd);
         }
     }

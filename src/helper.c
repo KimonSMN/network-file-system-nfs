@@ -104,7 +104,7 @@ void printf_fprintf(FILE* stream, char* format, ...){
 
 }
 
-int myconnect(const char* host, const char* port) {
+int myconnect(const char* host, int port) {
     int socketfd;
     struct sockaddr_in servaddr;
 

@@ -32,6 +32,6 @@ char* client_list(const char* source_dir);
 
 void printf_fprintf(FILE* stream, char* format, ...);
 
-int myconnect(const char* host, const char* port);
+int myconnect(const char* host, int port);
 // char* get_files(char* buffer);
 #endif
