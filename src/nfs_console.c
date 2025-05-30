@@ -52,6 +52,11 @@ int main(int argc, char* argv[]){
     inet_pton(AF_INET, host_ip, &servaddr.sin_addr);
     connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
 
+    FILE *consolelogFp = fopen(console_logfile, "w");
+    if (consolelogFp == NULL) {
+        return 1;
+    }
+
     int active = 1;
 
     while (active) {
@@ -67,12 +72,12 @@ int main(int argc, char* argv[]){
         char* source = strtok(NULL, " ");   // token = source
         char* target = strtok(NULL, " ");   // token = target
 
-        if(!handleCommand(command, sockfd, write_buffer, source, target)) {
+        if(!handleCommand(consolelogFp, command, sockfd, write_buffer, source, target)) {
             active = 0;
         };
-        printResponse(sockfd);
+        // printResponse(sockfd);
     }
-
+    fclose(consolelogFp);
     close(sockfd);
 
     return EXIT_SUCCESS;

@@ -66,10 +66,10 @@ int main(int argc, char* argv[]) {
                 free(arr);            
             }
         } else if (strcmp(cmd, "PULL") == 0) {
-            // char *source_dir = strtok(NULL, "\n");
-            // char *source_file = strtok(NULL, "\n");
-            // printf("I got %s and %s\n", source_dir, source_file);
-            write(client_fd, "Hello", strlen("Hello"));
+            char *source_dir = strtok(NULL, "\n");
+            char *source_file = strtok(NULL, "\n");
+           
+            client_pull(client_fd, source_dir, source_file);
 
         } else {
             dprintf(client_fd, "ERROR: Unknown command\n");

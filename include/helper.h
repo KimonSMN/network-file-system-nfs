@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 bool checkCommand(const char* input, const char* command);
 
@@ -22,8 +23,7 @@ bool sendCommand(int socketFd, const char* buffer);
 
 void printResponse(int socketFd);
 
-bool handleCommand(const char* input, int socketFd, const char* buffer, const char* source, const char* target);
-
+bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer, const char* source, const char* target);
 char* getTime();
 
 int check_dir(const char *path);
@@ -33,5 +33,6 @@ char* client_list(const char* source_dir);
 void printf_fprintf(FILE* stream, char* format, ...);
 
 int myconnect(const char* host, int port);
-// char* get_files(char* buffer);
+
+void client_pull(int client_fd, const char* dir, const char* filename);
 #endif

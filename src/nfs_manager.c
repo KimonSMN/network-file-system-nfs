@@ -46,7 +46,7 @@ void* worker_thread(void* arg) {
         }
     
         char command[512];
-        snprintf(command, sizeof(command), "PULL \n");
+        snprintf(command, sizeof(command), "PULL %s/%s\n", node->source_dir,node->filename);
         write(source_socket, command, strlen(command));
 
         close(source_socket);

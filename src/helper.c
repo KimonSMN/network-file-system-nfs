@@ -23,22 +23,28 @@ bool sendCommand(int socketFd, const char* buffer){
 void printResponse(int socketFd){
     char buffer[1024] = {0};
     read(socketFd, buffer, sizeof(buffer));
-    printf("Response: %s\n", buffer);
+    printf("%s\n", buffer);
 }
 
 
-bool handleCommand(const char* input, int socketFd, const char* buffer, const char* source, const char* target) {
+bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer, const char* source, const char* target) {
     if (checkCommand(input, "add")) {               // Command == add.
         if (source && target) {
+            fprintf(fp, "[%s] Command add /%s -> /%s\n", getTime(), source, target); // might change it and tokenize dir,host,port
+            fflush(fp);
             sendCommand(socketFd, buffer);
         } else
             printf("Usage: add <source> <target>"); 
     } else if (checkCommand(input, "cancel")) {     // Command == cancel.
         if (source) {
+            fprintf(fp, "[%s] Command cancel /%s\n", getTime(), source);
+            fflush(fp);
             sendCommand(socketFd, buffer);
         } else
             printf("Usage: cancel <source dir>");
     } else if (checkCommand(input, "shutdown")) {  // Command == shutdown.
+        fprintf(fp, "[%s] Command shutdown\n", getTime());
+        fflush(fp);
         sendCommand(socketFd, buffer);
         return false;
     } else
@@ -91,6 +97,16 @@ char* client_list(const char* source_dir){
     return array;
 }
 
+char* client_pull(const char* dir, const char* filename) {
+    // construct the path.
+    char path[1024];
+    snprintf(path, sizeof(path), "%s/%s", dir, filename);
+    // open ex. source1/file1.txt for reading
+    int fd = open(path, O_RDONLY);
+
+    
+}
+
 void printf_fprintf(FILE* stream, char* format, ...){
     va_list ap;
     va_start(ap, format);
@@ -125,16 +141,3 @@ int myconnect(const char* host, int port) {
     return socketfd;
 }
 
-// char* get_files(char* buffer) {
-//     char* files_string = malloc(sizeof(buffer));
-//     files_string[0] = '\0';
-    
-    
-//     char* file = strtok(buffer, "$");
-//     while (file != NULL) {
-//         strcat(files_string, file);
-//         file = strtok(NULL ,"$");
-//     }
-
-//     return files_string;
-// } 

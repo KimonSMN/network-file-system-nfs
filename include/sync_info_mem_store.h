@@ -23,10 +23,9 @@ typedef struct watchDir{
     int     active;
     int     error_count;
 
-    struct  watchDir* next;
+    int syncing;
 
-    // int watchdesc;
-    // int syncing;
+    struct  watchDir* next;
 } watchDir;
 
 typedef struct {
