@@ -71,7 +71,7 @@ int check_dir(const char *path) {
 
 char* client_list(const char* source_dir){
     char path[1024];
-    char* array = malloc(1024);
+    char* array = malloc(MAX_BUFFER_LENGTH);
     array[0] = '\0';
     getcwd(path, sizeof(path));
     strcat(path, source_dir);
@@ -98,14 +98,21 @@ char* client_list(const char* source_dir){
 }
 
 char* client_pull(const char* dir, const char* filename) {
-    // construct the path.
     char path[1024];
-    snprintf(path, sizeof(path), "%s/%s", dir, filename);
-    // open ex. source1/file1.txt for reading
-    int fd = open(path, O_RDONLY);
+    getcwd(path, sizeof(path));
+    strcat(path, "/");
+    strcat(path, dir);
+    strcat(path, "/");
+    strcat(path, filename);
 
-    
+    int fd = open(path, O_RDONLY);
+    char* buffer = malloc(MAX_BUFFER_LENGTH);
+    ssize_t bytes_read = read(fd, buffer, MAX_BUFFER_LENGTH - 1);
+    buffer[bytes_read] = '\0';
+    close(fd);
+    return buffer;
 }
+
 
 void printf_fprintf(FILE* stream, char* format, ...){
     va_list ap;

@@ -17,6 +17,8 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 
+#define MAX_BUFFER_LENGTH 4096
+
 bool checkCommand(const char* input, const char* command);
 
 bool sendCommand(int socketFd, const char* buffer);
@@ -34,5 +36,6 @@ void printf_fprintf(FILE* stream, char* format, ...);
 
 int myconnect(const char* host, int port);
 
-void client_pull(int client_fd, const char* dir, const char* filename);
+char* client_pull(const char* dir, const char* filename);
+
 #endif

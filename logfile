@@ -1,4 +1,3 @@
-[2025-05-30 19:50:58] Added file: /source1/greg@localhost:8000 -> /target1/greg@localhost:8000
-[2025-05-30 19:50:58] Added file: /source1/test@localhost:8000 -> /target1/test@localhost:8000
-[2025-05-30 19:50:58] Added file: /source1/kimon@localhost:8000 -> /target1/kimon@localhost:8000
-[2025-05-30 19:50:58] Added file: /source1/tsi@localhost:8000 -> /target1/tsi@localhost:8000
+[2025-05-30 20:35:37] Added file: /source1/file2.txt@localhost:8000 -> /target1/file2.txt@localhost:8000
+[2025-05-30 20:35:37] Added file: /source1/file1.txt@localhost:8000 -> /target1/file1.txt@localhost:8000
+[2025-05-30 20:35:37] Added file: /source1/file3.txt@localhost:8000 -> /target1/file3.txt@localhost:8000

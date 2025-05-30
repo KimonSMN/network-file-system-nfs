@@ -48,6 +48,11 @@ void* worker_thread(void* arg) {
         char command[512];
         snprintf(command, sizeof(command), "PULL %s/%s\n", node->source_dir,node->filename);
         write(source_socket, command, strlen(command));
+        char buffer[4096] = {0};
+        ssize_t bytes_read = read(source_socket, buffer, sizeof(buffer));
+
+        printf("File contents:\n%s\n", buffer);
+       
 
         close(source_socket);
     }
