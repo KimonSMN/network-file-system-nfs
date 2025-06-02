@@ -98,6 +98,7 @@ char* client_list(const char* source_dir){
 }
 
 char* client_pull(const char* dir, const char* filename) {
+    // construct the path
     char path[1024];
     getcwd(path, sizeof(path));
     strcat(path, "/");
@@ -105,10 +106,21 @@ char* client_pull(const char* dir, const char* filename) {
     strcat(path, "/");
     strcat(path, filename);
 
+    // get file size
+    char size[32];
+    struct stat st;
+    stat(path, &st);
+    sprintf(size, "%ld ", st.st_size);
+    int size_len = strlen(size);
+
+    char* buffer = malloc(size_len + st.st_size + 1);
+
+    snprintf(buffer, size_len + 1, "%ld ", st.st_size);
+
     int fd = open(path, O_RDONLY);
-    char* buffer = malloc(MAX_BUFFER_LENGTH);
-    ssize_t bytes_read = read(fd, buffer, MAX_BUFFER_LENGTH - 1);
-    buffer[bytes_read] = '\0';
+
+    ssize_t bytes_read = read(fd, buffer + size_len, st.st_size);
+    buffer[size_len + bytes_read] = '\0';
     close(fd);
     return buffer;
 }

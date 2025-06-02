@@ -53,13 +53,12 @@ int main(int argc, char* argv[]) {
 
         char buffer[1024] = {0};
         read(client_fd, buffer, sizeof(buffer));
-        printf("Received buffer: %s\n", buffer);  // Add this
+        printf("Received buffer: %s\n", buffer); 
 
-        // Parse command
         char *cmd = strtok(buffer, " \n");
         if (strcmp(cmd, "LIST") == 0) {
             char *source_dir = strtok(NULL, "\n");
-            // List the files in your directory
+
             char* arr = client_list(source_dir);
             if (arr != NULL) {
                 write(client_fd, arr, strlen(arr));
@@ -71,8 +70,11 @@ int main(int argc, char* argv[]) {
             char* buffer = client_pull(source_dir, source_file);
             if (buffer != NULL) {
                 write(client_fd, buffer, strlen(buffer));
-                free(buffer);            
+                free(buffer);     
+                shutdown(client_fd, SHUT_WR);
             }
+        } else if (strcmp(cmd, "PUSH") == 0) {
+            printf("I got push\n");
         } else {
             dprintf(client_fd, "ERROR: Unknown command\n");
         }

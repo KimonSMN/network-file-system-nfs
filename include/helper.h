@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -15,6 +14,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 
 #define MAX_BUFFER_LENGTH 4096
