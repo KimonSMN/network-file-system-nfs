@@ -39,4 +39,5 @@ int myconnect(const char* host, int port);
 
 char* client_pull(const char* dir, const char* filename);
 
+ssize_t safe_read(int socket_fd, char* buffer, size_t buffer_len);
 #endif
