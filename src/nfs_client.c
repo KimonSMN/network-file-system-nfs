@@ -31,7 +31,6 @@ int main(int argc, char* argv[]) {
     // Setup server socket
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -43,7 +42,7 @@ int main(int argc, char* argv[]) {
 
     bind(server_fd, (struct sockaddr *)&addr, sizeof(addr));
     listen(server_fd, 5);
-    printf("nfs_client listening on port %d...\n", port_number);
+    printf("[+]nfs_client listening on port %d\n", port_number);
     int client_fd;
     while (1) {
         client_fd = accept(server_fd, NULL, NULL);
@@ -55,8 +54,7 @@ int main(int argc, char* argv[]) {
         char header[4096] = {0};
 
         safe_read(client_fd, header, sizeof(header));
-        printf("[+]Recived Header: %s\n", header);
-        printf("[+]End of receiving...\n");
+        printf("\n[+]%s", header);
 
         char *cmd = strtok(header, " \n");
         if (strcmp(cmd, "LIST") == 0) {
@@ -72,7 +70,6 @@ int main(int argc, char* argv[]) {
             char *source_file = strtok(NULL, " \n");
             char* buffer = client_pull(source_dir, source_file);
             if (buffer != NULL) {
-                printf("[+]Buffer:\n\t %s\n", buffer);
                 write(client_fd, buffer, strlen(buffer));
                 free(buffer);     
                 shutdown(client_fd, SHUT_WR);
@@ -83,7 +80,6 @@ int main(int argc, char* argv[]) {
 
             char path[256];
             snprintf(path, sizeof(path), "%s/%s", target_dir, target_file);
-            printf("[+]Constructed path: %s\n", path);
 
             int target_fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 
@@ -111,7 +107,7 @@ int main(int argc, char* argv[]) {
                 size_t data_len = counter - (pointer_to_space - data_buf);
                 write(target_fd, pointer_to_space, data_len);
                 
-                printf("[+]Wrote %d bytes to %s\n", counter, target_file);
+                printf("[+]Completed Synchronization for %s.\n", target_file);
             }
             close(target_fd);
         } else {

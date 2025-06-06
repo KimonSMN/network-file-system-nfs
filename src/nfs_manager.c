@@ -45,35 +45,30 @@ void* worker_thread(void* arg) {
             continue;
         }
     
-        char command[4096];
-        snprintf(command, sizeof(command), "PULL %s/%s\n", node->source_dir,node->filename);
-        write(source_socket, command, strlen(command));
-        memset(command, 0, sizeof(command));
 
+        write_pull(source_socket, node->source_dir, node->filename);
         int target_socket = myconnect(node->target_host, atoi(node->target_port));
         if (target_socket < 0) {
             perror("Connection failed");
             continue;
         }
-
-        char buffer[4096] = {0};
-        ssize_t bytes_read;
         
+        char command[4096] = {0};
         snprintf(command, sizeof(command), "PUSH %s/%s \n", node->target_dir, node->filename);
         write(target_socket, command, strlen(command));
 
         char chunk_buf[1024];
+        char buffer[4096] = {0};
+        ssize_t bytes_read;
+
         while ((bytes_read = read(source_socket, buffer, sizeof(buffer))) > 0) {
             // Send chunk that was read. (chunk = bytes_read).
             snprintf(chunk_buf, sizeof(chunk_buf), "%ld\n", bytes_read);
             write(target_socket, chunk_buf, strlen(chunk_buf)); // Chunk
             write(target_socket, buffer, bytes_read);           // Data
-            printf("[+]Wrote to client: Chunk: %s | Data: %s\n", chunk_buf,buffer);
-        }   
-
+        }
         close(source_socket);
         close(target_socket);
-
     }
     return NULL;
 }
@@ -110,37 +105,28 @@ int main(int argc, char* argv[]) {
 
     // Δηµιουργεί ένα socket στο port που δόθηκε.
 
-    int serverfd, consolefd;
+    int server_fd, console_fd;
     struct sockaddr_in servaddr;
 
-    if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("socket");
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         exit(1);
-    }
-
+    
     int opt = 1;
-    setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = INADDR_ANY;
     servaddr.sin_port = htons(port_number);
 
-    bind(serverfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
-    listen(serverfd, 5);
+    bind(server_fd, (struct sockaddr*)&servaddr, sizeof(servaddr));
+    listen(server_fd, 5);
 
-    consolefd = accept(serverfd, NULL, NULL);
+    console_fd = accept(server_fd, NULL, NULL);
 
-    // We wait until nfs_console joins......
-    // Then we can continue.
-
-    char buffer[1024];
-
-    // Ακολούθως, ετοιµάζει τις διάφορες δοµές δεδοµένων που θα χρειαστεί για το συγχρονισµό των καταλόγων.
-    hashTable* table = init_hash_table();   // Initialize the hash-table.
-    q = init_queue();                       // Initialize the queue.
+    // Initialization:
+    hashTable* table = init_hash_table();
+    q = init_queue();
     
-    // Ετοιµάζει και δηµιουργεί ένα worker thread pool.
-
     pthread_t worker_thread_pool[worker_limit];
     pthread_mutex_init(&mutex, NULL);
     pthread_cond_init(&cond, NULL);
@@ -149,10 +135,7 @@ int main(int argc, char* argv[]) {
         pthread_create(&worker_thread_pool[i], NULL, worker_thread, NULL);
     }
 
-    // Προετοιµάζει επίσης τον συγχρονισµό καταλόγων που καθορίζονται στο config_file:
-    // Αρχικά συνδέεται στο source_host:source_port όπου τρέχει ένας nfs_client και στέλνει µια εντολή:
-
-    FILE *configFp = fopen(config_file, "r");         // Open the config file for reading.
+    FILE *configFp = fopen(config_file, "r");
     if (configFp == NULL) {
         return 1;
     }
@@ -162,9 +145,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Initialize variables.
     char line[1024];
-
     while (fgets(line, sizeof(line), configFp)) { // Read the config file.
         line[strcspn(line, "\n")] = 0;
 
@@ -179,51 +160,27 @@ int main(int argc, char* argv[]) {
             watchDir* curr = create_dir(source_dir, source_host, source_port, target_dir, target_host, target_port);
             insert_watchDir(table, curr);
 
-            // creatre a tcp connection
             // Connection with nfs_client(s)
-            int sockfd;
-            struct sockaddr_in servaddr;
+            int client_socket = myconnect(source_host, atoi(source_port));
+            write_list(client_socket, source_dir);  // Send LIST command to client.
+            
+             // Read from client the array requested with LIST.
+            char list_array[1024] = {0};
+            read(client_socket, list_array, sizeof(list_array));
 
-            // Create socket
-            sockfd = socket(AF_INET, SOCK_STREAM, 0);
+            char* file = strtok(list_array, "\n");
+            while (file != NULL) {  // For every file in the array.
 
-            int opt = 1;
-            setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-            memset(&servaddr, 0, sizeof(servaddr));
-            servaddr.sin_family = AF_INET;
-            servaddr.sin_port = htons(atoi(source_port));
+                if (strcmp(file, ".\0") == 0) // Signal EOF
+                    break;
 
-            inet_pton(AF_INET, source_host, &servaddr.sin_addr);
-            if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-                perror("Connection failed");
-                close(sockfd);
-                continue;
-            }
-
-            char command[512];
-            snprintf(command, sizeof(command), "LIST %s\n", source_dir);
-            write(sockfd, command, sizeof(command));
-            char new[1024];
-            memset(new, 0, sizeof(new));
-
-            read(sockfd, new, sizeof(new));
-            char* file = strtok(new, "\n"); // get first file from the buffer "file$\nfile$\n."
-            while (file != NULL) {
-
-                if (strcmp(file, ".\0") == 0) break; // end of file list
-                if (strlen(file) == 0) {
-                    file = strtok(NULL, "\n");
-                    continue;
-                }
-
-                // Τυπώνει στην οθόνη. Γράφει στο manager-log-file
+                // Prints output to the screen & to manager-log-file.
                 printf_fprintf(logfileFp,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir, file, target_host, target_port);
-                fflush(logfileFp);
-                // Στέλνει στο nfs_console
-                char consolebuffer[1024];
-                snprintf(consolebuffer,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
-                write(consolefd, consolebuffer, strlen(consolebuffer));
-                
+                // Sends message to nfs_console
+                char console_buf[1024];
+                snprintf(console_buf,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
+                write(console_fd, console_buf, strlen(console_buf));
+                // Setup job
                 node* job = init_node(source_dir, source_host, source_port, target_dir, target_host, target_port, file, "PUSH");
                 pthread_mutex_lock(&mutex);
                 enqueue(q, job);
@@ -232,30 +189,65 @@ int main(int argc, char* argv[]) {
 
                 file = strtok(NULL ,"\n");
             }
-            close(sockfd);
+            close(client_socket);
         }
     }
-    // print_hash_table(table);
-
-    // Στο οποίο θα δέχεται µηνύµατα επικοινωνίας από το nfs_console.
+    char buffer[1024];
     // Keep connection open.
     while (1) {
 
         memset(buffer, 0, sizeof(buffer));
-        int bytes = read(consolefd, buffer, sizeof(buffer));
-        if (bytes <= 0) {
-            continue;;
+        int bytes = read(console_fd, buffer, sizeof(buffer));
+        if (bytes <= 0) {   // If there isn't something to read continue.
+            continue;
         }
-
         // 1. Τυπώνει στην οθόνη,
         char* command = strtok(buffer," ");
-        char* source = strtok(NULL," ");
-        char* target = strtok(NULL," ");
+        char *source_dir  = strtok(NULL, " @:");
+        char *source_host = strtok(NULL, " @:");
+        char *source_port = strtok(NULL, " @:");
+        char *target_dir  = strtok(NULL, " @:");
+        char *target_host = strtok(NULL, " @:");
+        char *target_port = strtok(NULL, " @:");
         if (strcmp(command, "add") == 0) {
-            printf("[%s] Added file: %s -> %s\n", getTime(), source, target);
+
+            // Connection with nfs_client(s)
+            int client_socket = myconnect(source_host, atoi(source_port));
+            write_list(client_socket, source_dir);  // Send LIST command to client.
+            
+             // Read from client the array requested with LIST.
+            char list_array[1024] = {0};
+            read(client_socket, list_array, sizeof(list_array));
+
+            char* file = strtok(list_array, "\n");
+            while (file != NULL) {  // For every file in the array.
+
+                if (strcmp(file, ".\0") == 0) // Signal EOF
+                    break;
+
+                // Prints output to the screen & to manager-log-file.
+                printf_fprintf(logfileFp,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir, file, target_host, target_port);
+                // Sends message to nfs_console
+                char console_buf[1024];
+                snprintf(console_buf,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
+                write(console_fd, console_buf, strlen(console_buf));
+                // Setup job
+                node* job = init_node(source_dir, source_host, source_port, target_dir, target_host, target_port, file, "PUSH");
+                pthread_mutex_lock(&mutex);
+                enqueue(q, job);
+                pthread_cond_broadcast(&cond); 
+                pthread_mutex_unlock(&mutex);
+
+                file = strtok(NULL ,"\n");
+            }
+            close(client_socket);
+
+            fflush(stdout);
         } else if (strcmp(command, "cancel") == 0) {
-            printf("[%s] Synchronization stopped for: %s\n", getTime(), source);
-        } else {
+            printf("[%s] Synchronization stopped for: %s\n", getTime(), source_dir);
+            fflush(stdout);
+        } else if (strcmp(command, "shutdown") == 0) {
+            fflush(stdout);
             printf("[%s] Shutting down manager...\n", getTime());
             printf("[%s] Waiting for all active workers to finish.\n", getTime());
             printf("[%s] Processing remaining queued tasks.\n", getTime());
@@ -263,14 +255,14 @@ int main(int argc, char* argv[]) {
             break;
         }
         // 2. Στέλνει στο nfs_console, not done
-        write(consolefd, "ACK from server", strlen("ACK from server"));
+        write(console_fd, "ACK from server\n", strlen("ACK from server") + 1);
         // 3. Γράφει στο manager-log-file. not done
 
     }
 
     fclose(configFp);
     fclose(logfileFp);
-    close(consolefd);
-    close(serverfd);
+    close(console_fd);
+    close(server_fd);
     return EXIT_SUCCESS;
 }

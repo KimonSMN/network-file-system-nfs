@@ -13,6 +13,20 @@
 
 #include "helper.h"
 
+
+void* listen_thread(void* arg) {
+    int sockfd = *(int*)arg;
+    char buffer[1024];
+    while (1) {
+        memset(buffer, 0, sizeof(buffer));
+        ssize_t bytes = read(sockfd, buffer, sizeof(buffer) - 1);
+        if (bytes > 0) {
+            printf("\r%s$ ", buffer);
+            fflush(stdout);
+        }
+    }
+    return NULL;
+}
 int main(int argc, char* argv[]){
 
     char*   console_logfile = NULL;
@@ -34,6 +48,7 @@ int main(int argc, char* argv[]){
         printf("Usage: ./nfs_console -l <console-logfile> -h <host_IP> -p <host_port>\n");
         exit(1);
     }
+
 
     // SOCKETS
     int sockfd;
@@ -58,9 +73,13 @@ int main(int argc, char* argv[]){
     }
 
     int active = 1;
+    
+    pthread_t listener;
+    pthread_create(&listener, NULL, listen_thread, &sockfd);
 
     while (active) {
-        printf("\n$ ");
+        printf("$ ");
+
         char write_buffer[1024] = {0};
         fgets(write_buffer, sizeof(write_buffer), stdin);
         write_buffer[strlen(write_buffer)-1] = '\0';

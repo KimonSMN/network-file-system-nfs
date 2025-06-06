@@ -1,0 +1,2 @@
+[2025-06-06 14:22:46] Command add //source1@localhost:8000 -> //target2@localhost:8500
+[2025-06-06 14:22:57] Command shutdown

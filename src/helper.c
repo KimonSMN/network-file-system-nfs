@@ -34,14 +34,14 @@ bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer
             fflush(fp);
             sendCommand(socketFd, buffer);
         } else
-            printf("Usage: add <source> <target>"); 
+            printf("Usage: add <source> <target>\n"); 
     } else if (checkCommand(input, "cancel")) {     // Command == cancel.
         if (source) {
             fprintf(fp, "[%s] Command cancel /%s\n", getTime(), source);
             fflush(fp);
             sendCommand(socketFd, buffer);
         } else
-            printf("Usage: cancel <source dir>");
+            printf("Usage: cancel <source dir>\n");
     } else if (checkCommand(input, "shutdown")) {  // Command == shutdown.
         fprintf(fp, "[%s] Command shutdown\n", getTime());
         fflush(fp);
@@ -132,7 +132,6 @@ void printf_fprintf(FILE* stream, char* format, ...){
     vprintf(format, ap);
     va_end(ap);
 
-
     va_start(ap, format);
     vfprintf(stream, format, ap);
     va_end(ap);
@@ -177,3 +176,31 @@ ssize_t safe_read(int socket_fd, char* buffer, size_t buffer_len){
     buffer[safe_bytes_read] = '\0';
     return safe_bytes_read;
 }
+
+//            char command[512];
+// snprintf(command, sizeof(command), "LIST %s\n", source_dir);
+// write(client_socket, command, sizeof(command));
+int write_list(int socket_fd, const char* source_dir){
+    char* buffer = malloc(1024); 
+    if (buffer == NULL) 
+        return EXIT_FAILURE;
+
+    snprintf(buffer, 1024, "LIST %s\n", source_dir);
+    write(socket_fd, buffer, strlen(buffer));
+
+    free(buffer);
+    return EXIT_SUCCESS;
+}
+
+int write_pull(int socket_fd, const char* source_dir, const char* filename){
+    char* buffer = malloc(1024); 
+    if (buffer == NULL) 
+        return EXIT_FAILURE;
+
+    snprintf(buffer, 1024, "PULL %s/%s\n", source_dir, filename);
+    write(socket_fd, buffer, strlen(buffer));
+
+    free(buffer);
+    return EXIT_SUCCESS;
+}
+
