@@ -26,7 +26,8 @@ bool sendCommand(int socketFd, const char* buffer);
 
 void printResponse(int socketFd);
 
-bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer, const char* source, const char* target);
+bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer, const char* source_dir, const char* source_host, const char* source_port, const char* target_dir, const char* target_host, const char* target_port);
+
 char* getTime();
 
 int check_dir(const char *path);
@@ -34,6 +35,10 @@ int check_dir(const char *path);
 char* client_list(const char* source_dir);
 
 void printf_fprintf(FILE* stream, char* format, ...);
+
+void printf_write(int socket_fd, char* format, ...);
+
+void printf_fprintf_write(int socket_fd, FILE* stream, char* format, ...);
 
 int myconnect(const char* host, int port);
 

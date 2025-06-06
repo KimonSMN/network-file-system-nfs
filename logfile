@@ -1,8 +1,4 @@
-[2025-06-06 14:22:26] Added file: /source1/file4.txt@localhost:8000 -> /target1/file4.txt@localhost:8500
-[2025-06-06 14:22:26] Added file: /source1/file2.txt@localhost:8000 -> /target1/file2.txt@localhost:8500
-[2025-06-06 14:22:26] Added file: /source1/file1.txt@localhost:8000 -> /target1/file1.txt@localhost:8500
-[2025-06-06 14:22:26] Added file: /source1/file3.txt@localhost:8000 -> /target1/file3.txt@localhost:8500
-[2025-06-06 14:22:46] Added file: /source1/file4.txt@localhost:8000 -> /target2/file4.txt@localhost:8500
-[2025-06-06 14:22:46] Added file: /source1/file2.txt@localhost:8000 -> /target2/file2.txt@localhost:8500
-[2025-06-06 14:22:46] Added file: /source1/file1.txt@localhost:8000 -> /target2/file1.txt@localhost:8500
-[2025-06-06 14:22:46] Added file: /source1/file3.txt@localhost:8000 -> /target2/file3.txt@localhost:8500
+[2025-06-06 15:35:05] Added file: /source1/file4.txt@localhost:8000 -> /target1/file4.txt@localhost:8500
+[2025-06-06 15:35:05] Added file: /source1/file2.txt@localhost:8000 -> /target1/file2.txt@localhost:8500
+[2025-06-06 15:35:05] Added file: /source1/file1.txt@localhost:8000 -> /target1/file1.txt@localhost:8500
+[2025-06-06 15:35:05] Added file: /source1/file3.txt@localhost:8000 -> /target1/file3.txt@localhost:8500

@@ -27,21 +27,21 @@ void printResponse(int socketFd){
 }
 
 
-bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer, const char* source, const char* target) {
+bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer, const char* source_dir, const char* source_host, const char* source_port, const char* target_dir, const char* target_host, const char* target_port) {
     if (checkCommand(input, "add")) {               // Command == add.
-        if (source && target) {
-            fprintf(fp, "[%s] Command add /%s -> /%s\n", getTime(), source, target); // might change it and tokenize dir,host,port
+        if (source_dir && source_host && source_port && target_dir && target_host && target_port) {
+            fprintf(fp, "[%s] Command add /%s@%s:%s -> /%s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port); // might change it and tokenize dir,host,port
             fflush(fp);
             sendCommand(socketFd, buffer);
         } else
-            printf("Usage: add <source> <target>\n"); 
+            printf("Usage: add <source@host:port> <target@host:port>\n"); 
     } else if (checkCommand(input, "cancel")) {     // Command == cancel.
-        if (source) {
-            fprintf(fp, "[%s] Command cancel /%s\n", getTime(), source);
+        if (source_dir) {
+            fprintf(fp, "[%s] Command cancel /%s\n", getTime(), source_dir);
             fflush(fp);
             sendCommand(socketFd, buffer);
         } else
-            printf("Usage: cancel <source dir>\n");
+            printf("Usage: cancel <source_dir>\n");
     } else if (checkCommand(input, "shutdown")) {  // Command == shutdown.
         fprintf(fp, "[%s] Command shutdown\n", getTime());
         fflush(fp);
@@ -135,8 +135,37 @@ void printf_fprintf(FILE* stream, char* format, ...){
     va_start(ap, format);
     vfprintf(stream, format, ap);
     va_end(ap);
-
 }
+
+void printf_write(int socket_fd, char* format, ...){
+    char* buffer = malloc(256);
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, 256, format, args);
+    va_end(args);
+
+    printf("%s", buffer);
+    write(socket_fd, buffer, strlen(buffer));
+
+    free(buffer);
+}
+
+void printf_fprintf_write(int socket_fd, FILE* stream, char* format, ...) {
+    char* buffer = malloc(256);
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, 256, format, args);
+    va_end(args);
+
+    printf("%s", buffer);
+    fprintf(stream, "%s", buffer);
+    fflush(stream);
+
+    write(socket_fd, buffer, strlen(buffer));
+
+    free(buffer);
+}
+
 
 int myconnect(const char* host, int port) {
     int socketfd;

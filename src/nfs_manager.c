@@ -156,7 +156,84 @@ int main(int argc, char* argv[]) {
         char *target_host  = strtok(NULL, " @:");
         char *target_port  = strtok(NULL, " @:");
 
-        if (check_dir(source_dir) && check_dir(target_dir)) {
+        watchDir* curr = create_dir(source_dir, source_host, source_port, target_dir, target_host, target_port);
+        insert_watchDir(table, curr);
+
+        // Connection with nfs_client(s)
+        int client_socket = myconnect(source_host, atoi(source_port));
+        write_list(client_socket, source_dir);  // Send LIST command to client.
+        
+            // Read from client the array requested with LIST.
+        char list_array[1024] = {0};
+        read(client_socket, list_array, sizeof(list_array));
+
+        char* file = strtok(list_array, "\n");
+        while (file != NULL) {  // For every file in the array.
+
+            if (strcmp(file, ".\0") == 0) // Signal EOF
+                break;
+
+            // Prints output to the screen & to manager-log-file.
+            printf_fprintf(logfileFp,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir, file, target_host, target_port);
+            // Sends message to nfs_console
+            char console_buf[1024];
+            snprintf(console_buf,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
+            write(console_fd, console_buf, strlen(console_buf));
+            // Setup job
+            node* job = init_node(source_dir, source_host, source_port, target_dir, target_host, target_port, file, "PUSH");
+            pthread_mutex_lock(&mutex);
+            enqueue(q, job);
+            pthread_cond_broadcast(&cond); 
+            pthread_mutex_unlock(&mutex);
+
+            file = strtok(NULL ,"\n");
+        }
+        close(client_socket);
+        
+    }
+    char buffer[1024];
+    // Keep connection open.
+    while (1) {
+
+        memset(buffer, 0, sizeof(buffer));
+        int bytes = read(console_fd, buffer, sizeof(buffer));
+        if (bytes <= 0) {   // If there isn't something to read continue.
+            continue;
+        }
+
+        char* command = strtok(buffer," ");
+        if (command == NULL) 
+            continue;
+
+        if (strcmp(command, "shutdown") == 0) {
+            fflush(stdout);
+            printf("[%s] Shutting down manager...\n", getTime());
+            printf("[%s] Waiting for all active workers to finish.\n", getTime());
+            printf("[%s] Processing remaining queued tasks.\n", getTime());
+            printf("[%s] Manager shutdown complete.\n", getTime());
+            break;
+        } else if (strcmp(command, "cancel") == 0) {
+            char *source_dir  = strtok(NULL, " @:");
+            char *source_host = strtok(NULL, " @:");
+            char *source_port = strtok(NULL, " @:");
+
+            watchDir* curr = find_watchDir(table, source_dir);  // have to change to include full format source@host:port
+            if (curr) {
+                printf_fprintf_write(console_fd, logfileFp,"[%s] Synchronization stopped for: %s@%s:%s\n", getTime(), source_dir,source_host,source_port);
+                fflush(stdout);
+                curr->syncing = 0; // doesnt actually do anything rn.
+            } else {
+                printf_write(console_fd,"[%s] Directory not being synchronized: %s\n", getTime(), source_dir);
+                fflush(stdout);
+            }
+            
+        } else if (strcmp(command, "add") == 0) {
+            char *source_dir  = strtok(NULL, " @:");
+            char *source_host = strtok(NULL, " @:");
+            char *source_port = strtok(NULL, " @:");
+            char *target_dir  = strtok(NULL, " @:");
+            char *target_host = strtok(NULL, " @:");
+            char *target_port = strtok(NULL, " @:");
             watchDir* curr = create_dir(source_dir, source_host, source_port, target_dir, target_host, target_port);
             insert_watchDir(table, curr);
 
@@ -174,63 +251,9 @@ int main(int argc, char* argv[]) {
                 if (strcmp(file, ".\0") == 0) // Signal EOF
                     break;
 
-                // Prints output to the screen & to manager-log-file.
-                printf_fprintf(logfileFp,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir, file, target_host, target_port);
-                // Sends message to nfs_console
-                char console_buf[1024];
-                snprintf(console_buf,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
-                write(console_fd, console_buf, strlen(console_buf));
-                // Setup job
-                node* job = init_node(source_dir, source_host, source_port, target_dir, target_host, target_port, file, "PUSH");
-                pthread_mutex_lock(&mutex);
-                enqueue(q, job);
-                pthread_cond_broadcast(&cond); 
-                pthread_mutex_unlock(&mutex);
-
-                file = strtok(NULL ,"\n");
-            }
-            close(client_socket);
-        }
-    }
-    char buffer[1024];
-    // Keep connection open.
-    while (1) {
-
-        memset(buffer, 0, sizeof(buffer));
-        int bytes = read(console_fd, buffer, sizeof(buffer));
-        if (bytes <= 0) {   // If there isn't something to read continue.
-            continue;
-        }
-        // 1. Τυπώνει στην οθόνη,
-        char* command = strtok(buffer," ");
-        char *source_dir  = strtok(NULL, " @:");
-        char *source_host = strtok(NULL, " @:");
-        char *source_port = strtok(NULL, " @:");
-        char *target_dir  = strtok(NULL, " @:");
-        char *target_host = strtok(NULL, " @:");
-        char *target_port = strtok(NULL, " @:");
-        if (strcmp(command, "add") == 0) {
-
-            // Connection with nfs_client(s)
-            int client_socket = myconnect(source_host, atoi(source_port));
-            write_list(client_socket, source_dir);  // Send LIST command to client.
-            
-             // Read from client the array requested with LIST.
-            char list_array[1024] = {0};
-            read(client_socket, list_array, sizeof(list_array));
-
-            char* file = strtok(list_array, "\n");
-            while (file != NULL) {  // For every file in the array.
-
-                if (strcmp(file, ".\0") == 0) // Signal EOF
-                    break;
-
-                // Prints output to the screen & to manager-log-file.
-                printf_fprintf(logfileFp,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir, file, target_host, target_port);
-                // Sends message to nfs_console
-                char console_buf[1024];
-                snprintf(console_buf,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
-                write(console_fd, console_buf, strlen(console_buf));
+                // Prints output to the screen & to manager-log-file & sends it to console.
+                printf_fprintf_write(console_fd,logfileFp,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir, file, target_host, target_port);
+                
                 // Setup job
                 node* job = init_node(source_dir, source_host, source_port, target_dir, target_host, target_port, file, "PUSH");
                 pthread_mutex_lock(&mutex);
@@ -243,21 +266,7 @@ int main(int argc, char* argv[]) {
             close(client_socket);
 
             fflush(stdout);
-        } else if (strcmp(command, "cancel") == 0) {
-            printf("[%s] Synchronization stopped for: %s\n", getTime(), source_dir);
-            fflush(stdout);
-        } else if (strcmp(command, "shutdown") == 0) {
-            fflush(stdout);
-            printf("[%s] Shutting down manager...\n", getTime());
-            printf("[%s] Waiting for all active workers to finish.\n", getTime());
-            printf("[%s] Processing remaining queued tasks.\n", getTime());
-            printf("[%s] Manager shutdown complete.\n", getTime());
-            break;
         }
-        // 2. Στέλνει στο nfs_console, not done
-        write(console_fd, "ACK from server\n", strlen("ACK from server") + 1);
-        // 3. Γράφει στο manager-log-file. not done
-
     }
 
     fclose(configFp);

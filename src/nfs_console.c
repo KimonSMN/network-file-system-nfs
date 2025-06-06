@@ -87,11 +87,15 @@ int main(int argc, char* argv[]){
         char tmp[1024];
         strncpy(tmp, write_buffer, sizeof(write_buffer)); // safer.
 
-        char* command = strtok(tmp, " ");   // token = add
-        char* source = strtok(NULL, " ");   // token = source
-        char* target = strtok(NULL, " ");   // token = target
+        char* command     = strtok(tmp, " ");   // token = add
+        char *source_dir  = strtok(NULL, " @:");
+        char *source_host = strtok(NULL, " @:");
+        char *source_port = strtok(NULL, " @:");
+        char *target_dir  = strtok(NULL, " @:");
+        char *target_host = strtok(NULL, " @:");
+        char *target_port = strtok(NULL, " @:");
 
-        if(!handleCommand(consolelogFp, command, sockfd, write_buffer, source, target)) {
+        if(!handleCommand(consolelogFp, command, sockfd, write_buffer, source_dir, source_host, source_port, target_dir, target_host, target_port)) {
             active = 0;
         };
         // printResponse(sockfd);
