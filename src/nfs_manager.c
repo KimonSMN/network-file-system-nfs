@@ -21,7 +21,6 @@ queue* q;
 pthread_mutex_t mutex;
 pthread_cond_t cond;
 
-
 void* worker_thread(void* arg) {
     sleep(4);
     while (1) {
@@ -45,7 +44,6 @@ void* worker_thread(void* arg) {
             continue;
         }
     
-
         write_pull(source_socket, node->source_dir, node->filename);
         int target_socket = myconnect(node->target_host, atoi(node->target_port));
         if (target_socket < 0) {
@@ -225,11 +223,10 @@ int main(int argc, char* argv[]) {
             watchDir* curr = find_watchDir(table, source_dir);  // have to change to include full format source@host:port
             if (curr) {
                 printf_fprintf_write(console_fd, logfileFp,"[%s] Synchronization stopped for: %s@%s:%s\n", getTime(), source_dir,source_host,source_port);
-                fflush(stdout);
                 curr->syncing = 0; // doesnt actually do anything rn.
             } else {
                 printf_write(console_fd,"[%s] Directory not being synchronized: %s\n", getTime(), source_dir);
-                fflush(stdout);
+                
             }
             
         } else if (strcmp(command, "add") == 0) {

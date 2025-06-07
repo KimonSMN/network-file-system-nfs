@@ -40,8 +40,10 @@ bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer
             fprintf(fp, "[%s] Command cancel /%s\n", getTime(), source_dir);
             fflush(fp);
             sendCommand(socketFd, buffer);
-        } else
+        } else {
             printf("Usage: cancel <source_dir>\n");
+            fflush(stdout);
+        }
     } else if (checkCommand(input, "shutdown")) {  // Command == shutdown.
         fprintf(fp, "[%s] Command shutdown\n", getTime());
         fflush(fp);
