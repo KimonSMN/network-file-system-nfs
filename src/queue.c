@@ -42,6 +42,7 @@ queue* init_queue(){
     if(q == NULL) return NULL;
     q->head = NULL;
     q->tail = NULL;
+    q->size = 0;
     return q;
 }
 
@@ -57,6 +58,7 @@ int enqueue(queue* q, node* job){
     if(q->head == NULL){
         q->head = job;
     }
+    q->size++;
     return 0;
 }
 
@@ -68,6 +70,9 @@ node* dequeue(queue* q){
     if(q->head == NULL) {
         q->tail = NULL;
     }
+    if (q->size > 0)
+        q->size--;
+
     return job;
 }
 

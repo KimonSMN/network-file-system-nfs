@@ -23,7 +23,7 @@ pthread_cond_t cond;
 
 
 void* worker_thread(void* arg) {
-
+    sleep(4);
     while (1) {
         pthread_mutex_lock(&mutex);
 
@@ -126,7 +126,6 @@ int main(int argc, char* argv[]) {
     // Initialization:
     hashTable* table = init_hash_table();
     q = init_queue();
-    
     pthread_t worker_thread_pool[worker_limit];
     pthread_mutex_init(&mutex, NULL);
     pthread_cond_init(&cond, NULL);
@@ -173,6 +172,11 @@ int main(int argc, char* argv[]) {
             if (strcmp(file, ".\0") == 0) // Signal EOF
                 break;
 
+            if (q->size >= bufferSize) {
+                file = strtok(NULL ,"\n");
+                continue;
+            }
+
             // Prints output to the screen & to manager-log-file.
             printf_fprintf(logfileFp,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir, file, target_host, target_port);
             // Sends message to nfs_console
@@ -180,6 +184,7 @@ int main(int argc, char* argv[]) {
             snprintf(console_buf,1024,"[%s] Added file: %s/%s@%s:%s -> %s/%s@%s:%s\n", getTime(), source_dir, file, source_host, source_port, target_dir,file , target_host, target_port );
             write(console_fd, console_buf, strlen(console_buf));
             // Setup job
+      
             node* job = init_node(source_dir, source_host, source_port, target_dir, target_host, target_port, file, "PUSH");
             pthread_mutex_lock(&mutex);
             enqueue(q, job);

@@ -22,6 +22,7 @@ typedef struct node{
 typedef struct queue{
     node* head;
     node* tail;
+    int size;
 } queue;
 
 /* Initializes node struct and returns the node. */
