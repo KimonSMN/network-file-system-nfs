@@ -20,6 +20,7 @@
 
 #define MAX_BUFFER_LENGTH 4096
 
+
 bool checkCommand(const char* input, const char* command);
 
 bool sendCommand(int socketFd, const char* buffer);

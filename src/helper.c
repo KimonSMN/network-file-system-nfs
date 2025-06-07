@@ -30,14 +30,14 @@ void printResponse(int socketFd){
 bool handleCommand(FILE* fp, const char* input, int socketFd, const char* buffer, const char* source_dir, const char* source_host, const char* source_port, const char* target_dir, const char* target_host, const char* target_port) {
     if (checkCommand(input, "add")) {               // Command == add.
         if (source_dir && source_host && source_port && target_dir && target_host && target_port) {
-            fprintf(fp, "[%s] Command add /%s@%s:%s -> /%s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port); // might change it and tokenize dir,host,port
+            fprintf(fp, "[%s] Command add %s@%s:%s -> /%s@%s:%s\n", getTime(), source_dir, source_host, source_port, target_dir, target_host, target_port); // might change it and tokenize dir,host,port
             fflush(fp);
             sendCommand(socketFd, buffer);
         } else
             printf("Usage: add <source@host:port> <target@host:port>\n"); 
     } else if (checkCommand(input, "cancel")) {     // Command == cancel.
         if (source_dir) {
-            fprintf(fp, "[%s] Command cancel /%s\n", getTime(), source_dir);
+            fprintf(fp, "[%s] Command cancel %s\n", getTime(), source_dir);
             fflush(fp);
             sendCommand(socketFd, buffer);
         } else {

@@ -13,16 +13,16 @@ typedef struct node{
     char*   target_port;
     char*   target_dir;
     
-    char* filename;
-    char* operation;
-    struct node* next;
+    char*   filename;
+    char*   operation;
+    struct  node* next;
 } node;
 
 
 typedef struct queue{
-    node* head;
-    node* tail;
-    int size;
+    node*   head;
+    node*   tail;
+    int     size;
 } queue;
 
 /* Initializes node struct and returns the node. */
@@ -43,4 +43,6 @@ node* dequeue(queue* q);
     Return 0 if it's not empty. */
 int isEmpty(queue* q);
 
+/* Free memory allocated by the initialization of the queue. */
+void destroy_queue(queue* q);
 #endif

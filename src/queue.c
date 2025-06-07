@@ -9,7 +9,7 @@ node* init_node(char* source_dir, char* source_host, char* source_port, char* ta
     job->source_dir = strdup(source_dir);
     job->source_host = strdup(source_host);
     job->source_port = strdup(source_port);
-    
+
     job->target_dir = strdup(target_dir);
     job->target_host = strdup(target_host);
     job->target_port = strdup(target_port);
@@ -51,13 +51,13 @@ int enqueue(queue* q, node* job){
     if (job == NULL) return 1;
     
     job->next = NULL;
-    if (q->tail != NULL){   // if there is a tail connect the node next to it
+    if (q->tail != NULL)   // if there is a tail connect the node next to it
         q->tail->next = job;
-    }
+    
     q->tail = job;
-    if(q->head == NULL){
+    if(q->head == NULL)
         q->head = job;
-    }
+    
     q->size++;
     return 0;
 }
@@ -67,9 +67,10 @@ node* dequeue(queue* q){
     
     node* job = q->head;
     q->head = job->next;
-    if(q->head == NULL) {
+
+    if(q->head == NULL) 
         q->tail = NULL;
-    }
+    
     if (q->size > 0)
         q->size--;
 
@@ -79,4 +80,18 @@ node* dequeue(queue* q){
 int isEmpty(queue* q){
    
     return q->head == NULL;
+}
+
+void destroy_queue(queue* q) {
+    if (q == NULL) return;
+    
+    node* curr = q->head;
+
+    while (curr != NULL) {
+        node* temp = curr->next;
+        destroy_node(curr);
+        curr = temp;
+    }
+
+    free(q);
 }
