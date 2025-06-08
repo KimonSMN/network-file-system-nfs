@@ -173,7 +173,6 @@ int myconnect(const char* host, int port) {
     int socketfd;
     struct sockaddr_in servaddr;
 
-    // Create socket
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
 
     int opt = 1;
@@ -197,12 +196,11 @@ ssize_t safe_read(int socket_fd, char* buffer, size_t buffer_len){
         ssize_t bytes_read = read(socket_fd, &c, 1);
         if (bytes_read == 1) {
             buffer[safe_bytes_read++] = c;
-            if (c == '\n') {
+            if (c == '\n')
                 break;
-            }
-        } else if (bytes_read == 0) {
+        } else if (bytes_read == 0)
             break; // EOF
-        }
+        
     }
     buffer[safe_bytes_read] = '\0';
     return safe_bytes_read;

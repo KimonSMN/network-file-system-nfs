@@ -48,5 +48,6 @@ char* client_pull(const char* dir, const char* filename);
 ssize_t safe_read(int socket_fd, char* buffer, size_t buffer_len);
 
 int write_list(int socket_fd, const char* source_dir);
+
 int write_pull(int socket_fd, const char* source_dir, const char* filename);
 #endif

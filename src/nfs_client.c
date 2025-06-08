@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 
     bind(server_fd, (struct sockaddr *)&addr, sizeof(addr));
     listen(server_fd, 5);
-    printf("[+]nfs_client listening on port %d\n", port_number);
+    printf("nfs_client listening on port %d\n", port_number);
     int client_fd;
     while (1) {
         client_fd = accept(server_fd, NULL, NULL);
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
         char header[4096] = {0};
 
         safe_read(client_fd, header, sizeof(header));
-        printf("\n[+]%s", header);
+        // printf("\n[+]%s", header);
 
         char *cmd = strtok(header, " \n");
         if (strcmp(cmd, "LIST") == 0) {
@@ -107,7 +107,7 @@ int main(int argc, char* argv[]) {
                 size_t data_len = counter - (pointer_to_space - data_buf);
                 write(target_fd, pointer_to_space, data_len);
                 
-                printf("[+]Completed Synchronization for %s.\n", target_file);
+                // printf("[+]Completed Synchronization for %s.\n", target_file);
             }
             close(target_fd);
         } else {

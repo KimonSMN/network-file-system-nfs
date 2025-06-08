@@ -20,14 +20,19 @@
 queue* q;
 pthread_mutex_t mutex;
 pthread_cond_t cond;
+int active = 0; // variable used in shutdown.
 
 void* worker_thread(void* arg) {
-    sleep(4);
     while (1) { // Keep thread open.
         pthread_mutex_lock(&mutex); // Lock it.
 
-        while (isEmpty(q))  // Wait if queue is empty.
+        while (isEmpty(q) && active == 0)  // Wait if queue is empty.
             pthread_cond_wait(&cond, &mutex);
+
+        if (active == 1)  {
+            pthread_mutex_unlock(&mutex);
+            break;
+        }
 
         node* node = dequeue(q);        // Pop the job.
         pthread_mutex_unlock(&mutex);   // Unlock mutex.
@@ -202,6 +207,8 @@ int main(int argc, char* argv[]) {
   
             printf("[%s] Shutting down manager...\n", getTime());
             printf("[%s] Waiting for all active workers to finish.\n", getTime());
+            active = 1; // global variable
+            pthread_cond_broadcast(&cond); 
             for (int i = 0; i < worker_limit; i++) {
                 pthread_join(worker_thread_pool[i], NULL);
             }
